@@ -126,7 +126,7 @@ function Hero() {
           <h1 className="mt-6 text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">Filipe Cavalcante</h1>
           <p className="mt-5 text-2xl font-medium leading-snug text-primary sm:text-3xl">Engenharia Eletrônica &amp; Desenvolvimento Tecnológico</p>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">Da bancada ao firmware: eletrônica que resolve problemas reais.</p>
-          <p className="mt-8 font-mono text-sm text-muted-foreground">Hardware • Sistemas Embarcados • PCB • Inovação • Software</p>
+          <p className="mt-8 font-mono text-sm text-muted-foreground">Hardware • Firmware • Software • Sistemas Embarcados</p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <a href="#projetos" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:brightness-110">
               Ver projetos <ArrowRight className="h-4 w-4" />
@@ -146,9 +146,9 @@ function Hero() {
 function Proofs() {
   const items = [
     ["7+", "Anos de Bancada"],
-    ["CRT-SP", "Registro Ativo (CFT)"],
+    ["CRT-SP", "Conselho Federal dos Técnicos Industriais"],
     ["ESP32 · STM32", "C/C++"],
-    ["ENIAC", "Engenharia Elétrica (Em andamento)"],
+    ["Engenharia Elétrica ", "Centro Universitário ENIAC (Em andamento)"],
   ];
   return (
     <section className="border-y bg-card/40">
@@ -201,7 +201,7 @@ function Projects() {
         </div>
         <div className="mt-10 text-center">
           <button className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm transition hover:border-primary/50">
-            <Github className="h-4 w-4" /> Ver todos no GitHub
+            <Github className="h-4 w-4" /> Ver mais no GitHub
           </button>
         </div>
       </div>
@@ -211,10 +211,10 @@ function Projects() {
 
 const skills = [
   { icon: CircuitBoard, t: "Hardware & PCB", items: ["Captura de esquemáticos", "Layout multicamadas", "DFM / DFT", "Fontes e reguladores"] },
-  { icon: Cpu, t: "Firmware & Embarcados", items: ["C/C++ embarcado", "ESP32 · STM32 · Arduino", "FreeRTOS", "UART · SPI · I²C · CAN"] },
-  { icon: Activity, t: "Bancada & Instrumentação", items: ["Diagnóstico em nível de componente", "Retrabalho SMD", "Osciloscópio e analisador lógico", "Calibração"] },
+  { icon: Cpu, t: "Firmware & Embarcados", items: ["Microcontroladores", "ESP32 · STM32 · Arduino", "FreeRTOS", "UART · SPI · I²C · CAN"] },
+  { icon: Activity, t: "Bancada & Instrumentação", items: ["Diagnóstico em nível de componente", "Retrabalho SMD / PTH", "Osciloscópio e analisador lógico", "Calibração"] },
   { icon: ClipboardCheck, t: "Métodos & Qualidade", items: ["RCA (análise de causa raiz)", "FMEA", "Documentação técnica", "Normas e segurança"] },
-  { icon: Code2, t: "Software & Telemetria", items: ["Python", "MQTT · REST", "SQL", "Power BI"] },
+  { icon: Code2, t: "Software & Telemetria", items: ["C/C++ embarcado", "MQTT · REST", "SQL", "Power BI"] },
 ];
 
 function Skills() {

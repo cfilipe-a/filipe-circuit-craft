@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   ArrowRight, Download, Cpu, CircuitBoard, Activity, BarChart3, Menu, X, Mail, Linkedin,
@@ -191,9 +191,9 @@ function Projects() {
                   <div><dt className="inline font-mono text-xs text-primary">Solução: </dt><dd className="inline text-muted-foreground">{p.s}</dd></div>
                 </dl>
                 <div className="mt-4 flex flex-wrap gap-2">{p.stack.map((s) => <Chip key={s}>{s}</Chip>)}</div>
-                <button className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary transition group-hover:gap-3">
+                <Link to="/projetos/$slug" params={{ slug: "exemplo" }} className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary transition group-hover:gap-3">
                   Ver detalhes <ArrowRight className="h-4 w-4" />
-                </button>
+                </Link>
               </div>
             </article>
           ))}

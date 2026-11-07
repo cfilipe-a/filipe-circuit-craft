@@ -152,8 +152,8 @@ function Proofs() {
   return (
     <section className="border-y bg-card/40">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-px px-5 sm:grid-cols-3">
-        {items.map(([a, b]) => (
-          <div key={b} className="py-8 text-center">
+        {items.map(([a, b], i) => (
+          <div key={b} className={`py-8 text-center ${i === 0 ? "sm:text-left" : i === 2 ? "sm:text-right" : ""}`}>
             <p className="whitespace-nowrap font-display text-2xl font-semibold text-primary sm:text-3xl">
               {a === "CRT-SP" ? <abbr title="Conselho Regional dos Técnicos Industriais de São Paulo" className="no-underline">{a}</abbr> : a}
             </p>

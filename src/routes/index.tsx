@@ -147,15 +147,14 @@ function Proofs() {
   const items = [
     ["7+", "Anos de Bancada"],
     ["CRT-SP", "Conselho Federal dos Técnicos Industriais"],
-    ["ESP32 · STM32", "C/C++"],
-    ["Engenharia Elétrica ", "Centro Universitário ENIAC (Em andamento)"],
+    ["Engenharia Elétrica", "Centro Universitário ENIAC (Em andamento)"],
   ];
   return (
     <section className="border-y bg-card/40">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px px-5 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-px px-5 sm:grid-cols-3">
         {items.map(([a, b]) => (
           <div key={b} className="py-8 text-center">
-            <p className="font-display text-2xl font-semibold text-primary sm:text-3xl">
+            <p className="whitespace-nowrap font-display text-2xl font-semibold text-primary sm:text-3xl">
               {a === "CRT-SP" ? <abbr title="Conselho Regional dos Técnicos Industriais de São Paulo" className="no-underline">{a}</abbr> : a}
             </p>
             <p className="mt-1 font-mono text-xs text-muted-foreground">{b}</p>

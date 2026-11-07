@@ -116,51 +116,27 @@ const focus = [
 
 function Hero() {
   return (
-    <section id="sobre" className="relative overflow-hidden pt-32 pb-20 sm:pt-40">
-      <div className="dot-grid absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
-      <PcbCorner className="left-0 top-16" />
-      <PcbCorner className="right-0 bottom-0 rotate-180" />
-      <div className="relative mx-auto grid max-w-6xl gap-12 px-5 lg:grid-cols-[1.4fr_1fr] lg:items-center">
-        <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-amber/30 bg-amber/10 px-3 py-1 font-mono text-xs text-amber">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-70" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber" />
-            </span>
-            Disponível para P&D e Projetos de Hardware
-          </span>
-          <p className="mt-6 font-mono text-sm text-muted-foreground">Filipe Cavalcante — Técnico em Eletrônica | Graduando em Engenharia Elétrica</p>
-          <h1 className="mt-4 text-4xl font-semibold leading-[1.08] sm:text-5xl lg:text-6xl">
-            Da bancada ao firmware: <span className="text-gradient">eletrônica que resolve problemas reais.</span>
-          </h1>
-          <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Diagnóstico em bancada, projeto de hardware, firmware embarcado e análise de dados — a cadeia completa, do sinal medido no osciloscópio ao indicador no dashboard.
+    <section id="sobre" className="relative overflow-hidden pt-36 pb-24 sm:pt-44 sm:pb-32">
+      <div className="line-grid absolute inset-0 [mask-image:radial-gradient(ellipse_70%_65%_at_50%_40%,black_35%,transparent_100%)]" />
+      <div className="relative mx-auto max-w-6xl px-5">
+        <div className="max-w-3xl">
+          <p className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.25em] text-muted-foreground">
+            <span className="h-px w-10 bg-primary" /> Engenharia Aplicada &amp; PD&amp;I
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <h1 className="mt-6 text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">Filipe Cavalcante</h1>
+          <p className="mt-5 text-2xl font-medium leading-snug text-primary sm:text-3xl">Engenharia Eletrônica &amp; Desenvolvimento Tecnológico</p>
+          <p className="mt-6 max-w-xl text-lg text-muted-foreground">Da bancada ao firmware: eletrônica que resolve problemas reais.</p>
+          <p className="mt-8 font-mono text-sm text-muted-foreground">Hardware • Sistemas Embarcados • PCB • Inovação • Software</p>
+          <div className="mt-10 flex flex-wrap items-center gap-3">
             <a href="#projetos" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:brightness-110">
               Ver projetos <ArrowRight className="h-4 w-4" />
             </a>
             <button className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm font-medium transition hover:border-primary/50">
               <Download className="h-4 w-4" /> Baixar currículo
             </button>
+            <button aria-label="LinkedIn" className="ml-2 grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Linkedin className="h-5 w-5" /></button>
+            <button aria-label="GitHub" className="grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Github className="h-5 w-5" /></button>
           </div>
-        </div>
-        <div className="relative rounded-2xl border bg-card/80 p-6 backdrop-blur">
-          <div className="mb-5 flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Áreas de Foco / Atuação</h3>
-            <span className="font-mono text-[10px] text-muted-foreground">CH1–CH4</span>
-          </div>
-          <ul className="space-y-3">
-            {focus.map(({ icon: I, t, d }) => (
-              <li key={t} className="card-hover flex items-center gap-4 rounded-xl border bg-background/60 p-4">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><I className="h-5 w-5" /></span>
-                <div className="min-w-0">
-                  <p className="font-medium">{t}</p>
-                  <p className="font-mono text-xs text-muted-foreground">{d}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
     </section>

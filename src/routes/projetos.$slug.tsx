@@ -114,9 +114,9 @@ function ProjectPage() {
         {/* Gallery */}
         <section>
           <SectionLabel n="02">Galeria de bancada</SectionLabel>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="-mx-6 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-6 px-6 pb-4 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0">
             {p.gallery.map((g) => (
-              <figure key={g.caption} className="card-hover group overflow-hidden rounded-2xl border bg-card">
+              <figure key={g.caption} className="card-hover group w-[85%] shrink-0 snap-start overflow-hidden rounded-2xl border bg-card sm:w-[calc(50%-10px)] lg:w-auto">
                 <div className="aspect-[4/3] overflow-hidden">
                   <img src={g.src} alt={g.caption} loading="lazy" width={1024} height={768} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                 </div>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useRef } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Copy, FileText, Github, PlayCircle, Terminal, CheckCircle2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Copy, X, FileText, Github, PlayCircle, Terminal, CheckCircle2 } from "lucide-react";
 import { getProjectDoc } from "@/data/projects";
 
 export const Route = createFileRoute("/projetos/$slug")({
@@ -83,8 +83,32 @@ function Gallery({ items }: { items: { src: string; caption: string }[] }) {
     el.scrollTo({ left: target * w, behavior: "smooth" });
   };
 
+  const [open, setOpen] = useState<number | null>(null);
+  useEffect(() => {
+    if (open === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(null);
+      if (e.key === "ArrowRight") setOpen((i) => (i === null ? i : (i + 1) % items.length));
+      if (e.key === "ArrowLeft") setOpen((i) => (i === null ? i : (i - 1 + items.length) % items.length));
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [open, items.length]);
+
   return (
     <section>
+      {open !== null && (
+        <div role="dialog" aria-modal="true" aria-label="Foto ampliada" className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/95 p-4 backdrop-blur" onClick={() => setOpen(null)}>
+          <button type="button" aria-label="Fechar" onClick={() => setOpen(null)} className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-lg border bg-card text-muted-foreground transition hover:border-primary/60 hover:text-primary"><X className="h-5 w-5" /></button>
+          <img src={items[open].src} alt={items[open].caption} className="max-h-[80vh] max-w-full rounded-xl border object-contain" onClick={(e) => e.stopPropagation()} />
+          <div className="mt-4 flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
+            <button type="button" aria-label="Foto anterior" onClick={() => setOpen((open - 1 + items.length) % items.length)} className="grid h-10 w-10 place-items-center rounded-lg border bg-card text-muted-foreground transition hover:border-primary/60 hover:text-primary"><ChevronLeft className="h-5 w-5" /></button>
+            <p className="font-mono text-xs text-muted-foreground"><span className="text-primary">{open + 1}/{items.length}</span> — {items[open].caption}</p>
+            <button type="button" aria-label="Próxima foto" onClick={() => setOpen((open + 1) % items.length)} className="grid h-10 w-10 place-items-center rounded-lg border bg-card text-muted-foreground transition hover:border-primary/60 hover:text-primary"><ChevronRight className="h-5 w-5" /></button>
+          </div>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-4">
         <SectionLabel n="02">Galeria de bancada</SectionLabel>
         <div className="flex gap-2 lg:hidden">
@@ -112,8 +136,8 @@ function Gallery({ items }: { items: { src: string; caption: string }[] }) {
         onPointerLeave={onUp}
         className="scrollbar-none -mx-6 flex cursor-grab snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-6 px-6 select-none active:cursor-grabbing lg:mx-0 lg:grid lg:cursor-auto lg:grid-cols-3 lg:overflow-visible lg:px-0"
       >
-        {items.map((g) => (
-          <figure key={g.caption} className="card-hover group w-[85%] shrink-0 snap-start overflow-hidden rounded-2xl border bg-card sm:w-[calc(50%-10px)] lg:w-auto">
+        {items.map((g, idx) => (
+          <figure key={g.caption} onClick={() => { if (!drag.current.moved) setOpen(idx); }} className="card-hover group w-[85%] cursor-zoom-in shrink-0 snap-start overflow-hidden rounded-2xl border bg-card sm:w-[calc(50%-10px)] lg:w-auto">
             <div className="aspect-[4/3] overflow-hidden">
               <img src={g.src} alt={g.caption} loading="lazy" draggable={false} width={1024} height={768} className="pointer-events-none h-full w-full object-cover transition duration-500 group-hover:scale-105" />
             </div>
@@ -122,6 +146,21 @@ function Gallery({ items }: { items: { src: string; caption: string }[] }) {
         ))}
       </div>
     </section>
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try { await navigator.clipboard.writeText(text); setDone(true); setTimeout(() => setDone(false), 2000); } catch { /* ignore */ }
+      }}
+      className="inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition hover:text-primary"
+    >
+      {done ? <><Check className="h-3.5 w-3.5 text-primary" /> Copiado</> : <><Copy className="h-3.5 w-3.5" /> Copiar</>}
+    </button>
   );
 }
 
@@ -211,7 +250,7 @@ function ProjectPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="rounded border border-primary/30 px-2 py-0.5 font-mono text-[10px] text-primary">{p.code.language}</span>
-                  <button className="inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition hover:text-primary"><Copy className="h-3.5 w-3.5" /> Copiar</button>
+                  <CopyButton text={p.code.content} />
                 </div>
               </div>
               <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed">

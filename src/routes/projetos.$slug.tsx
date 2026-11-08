@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Copy, FileText, Github, PlayCircle, Terminal, CheckCircle2 } from "lucide-react";
+import { useRef } from "react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Copy, FileText, Github, PlayCircle, Terminal, CheckCircle2 } from "lucide-react";
 import { getProjectDoc } from "@/data/projects";
 
 export const Route = createFileRoute("/projetos/$slug")({
@@ -41,6 +42,86 @@ function SectionLabel({ n, children }: { n: string; children: React.ReactNode })
       <span className="h-px w-8 bg-primary/40" />
       <h2 className="text-2xl font-semibold">{children}</h2>
     </div>
+  );
+}
+
+function Gallery({ items }: { items: { src: string; caption: string }[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef({ down: false, startX: 0, startScroll: 0, moved: false });
+
+  const step = (dir: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const card = el.querySelector("figure") as HTMLElement | null;
+    const w = card ? card.offsetWidth + 20 : el.clientWidth;
+    el.scrollBy({ left: dir * w, behavior: "smooth" });
+  };
+
+  const onDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse" || !ref.current) return;
+    drag.current = { down: true, startX: e.clientX, startScroll: ref.current.scrollLeft, moved: false };
+    ref.current.style.scrollSnapType = "none";
+  };
+  const onMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d.down || !ref.current) return;
+    const dx = e.clientX - d.startX;
+    if (Math.abs(dx) > 3) d.moved = true;
+    ref.current.scrollLeft = d.startScroll - dx;
+  };
+  const onUp = () => {
+    const d = drag.current;
+    const el = ref.current;
+    if (!d.down || !el) return;
+    d.down = false;
+    const card = el.querySelector("figure") as HTMLElement | null;
+    const w = card ? card.offsetWidth + 20 : el.clientWidth;
+    const delta = el.scrollLeft - d.startScroll;
+    const base = Math.round(d.startScroll / w);
+    const target = Math.abs(delta) > w * 0.15 ? base + Math.sign(delta) : base;
+    el.style.scrollSnapType = "";
+    el.scrollTo({ left: target * w, behavior: "smooth" });
+  };
+
+  return (
+    <section>
+      <div className="flex items-start justify-between gap-4">
+        <SectionLabel n="02">Galeria de bancada</SectionLabel>
+        <div className="flex gap-2 lg:hidden">
+          {[
+            { dir: -1, Icon: ChevronLeft, label: "Foto anterior" },
+            { dir: 1, Icon: ChevronRight, label: "Próxima foto" },
+          ].map(({ dir, Icon, label }) => (
+            <button
+              key={dir}
+              type="button"
+              aria-label={label}
+              onClick={() => step(dir)}
+              className="grid h-9 w-9 place-items-center rounded-lg border bg-card text-muted-foreground transition hover:border-primary/60 hover:text-primary"
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div
+        ref={ref}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerLeave={onUp}
+        className="scrollbar-none -mx-6 flex cursor-grab snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-6 px-6 select-none active:cursor-grabbing lg:mx-0 lg:grid lg:cursor-auto lg:grid-cols-3 lg:overflow-visible lg:px-0"
+      >
+        {items.map((g) => (
+          <figure key={g.caption} className="card-hover group w-[85%] shrink-0 snap-start overflow-hidden rounded-2xl border bg-card sm:w-[calc(50%-10px)] lg:w-auto">
+            <div className="aspect-[4/3] overflow-hidden">
+              <img src={g.src} alt={g.caption} loading="lazy" draggable={false} width={1024} height={768} className="pointer-events-none h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+            </div>
+            <figcaption className="p-4 font-mono text-xs text-muted-foreground">{g.caption}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -112,19 +193,7 @@ function ProjectPage() {
         </section>
 
         {/* Gallery */}
-        <section>
-          <SectionLabel n="02">Galeria de bancada</SectionLabel>
-          <div className="-mx-6 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-6 px-6 pb-4 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0">
-            {p.gallery.map((g) => (
-              <figure key={g.caption} className="card-hover group w-[85%] shrink-0 snap-start overflow-hidden rounded-2xl border bg-card sm:w-[calc(50%-10px)] lg:w-auto">
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img src={g.src} alt={g.caption} loading="lazy" width={1024} height={768} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-                </div>
-                <figcaption className="p-4 font-mono text-xs text-muted-foreground">{g.caption}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
+        <Gallery items={p.gallery} />
 
         {/* Code */}
         {p.code && (

@@ -101,10 +101,10 @@ function Gallery({ items }: { items: { src: string; caption: string }[] }) {
       {open !== null && (
         <div role="dialog" aria-modal="true" aria-label="Foto ampliada" className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/95 p-4 backdrop-blur" onClick={() => setOpen(null)}>
           <button type="button" aria-label="Fechar" onClick={() => setOpen(null)} className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-lg border bg-card text-muted-foreground transition hover:border-primary/60 hover:text-primary"><X className="h-5 w-5" /></button>
-          <img src={items[open].src} alt={items[open].caption} className="max-h-[80vh] max-w-full rounded-xl border object-contain" onClick={(e) => e.stopPropagation()} />
+          <img src={items[open]!.src} alt={items[open]!.caption} className="max-h-[80vh] max-w-full rounded-xl border object-contain" onClick={(e) => e.stopPropagation()} />
           <div className="mt-4 flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
             <button type="button" aria-label="Foto anterior" onClick={() => setOpen((open - 1 + items.length) % items.length)} className="grid h-10 w-10 place-items-center rounded-lg border bg-card text-muted-foreground transition hover:border-primary/60 hover:text-primary"><ChevronLeft className="h-5 w-5" /></button>
-            <p className="font-mono text-xs text-muted-foreground"><span className="text-primary">{open + 1}/{items.length}</span> — {items[open].caption}</p>
+            <p className="font-mono text-xs text-muted-foreground"><span className="text-primary">{open + 1}/{items.length}</span> — {items[open]!.caption}</p>
             <button type="button" aria-label="Próxima foto" onClick={() => setOpen((open + 1) % items.length)} className="grid h-10 w-10 place-items-center rounded-lg border bg-card text-muted-foreground transition hover:border-primary/60 hover:text-primary"><ChevronRight className="h-5 w-5" /></button>
           </div>
         </div>

@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Regras do Projeto
+
+- **Dependências (`bun.lock`)**: O Lovable e o workflow do GitHub Actions (`.github/workflows/deploy-pages.yml`) utilizam `bun.lock` como fonte única de verdade. **Nunca** instale ou adicione novas dependências localmente por fora (ex.: `npm install <pacote>`) e **nunca** faça commit de `package-lock.json`. Sempre que uma tarefa precisar de uma nova dependência, **avise o usuário antes** para que ele adicione o pacote pelo **Lovable** (mantendo o `bun.lock` sincronizado) e, em seguida, sincronize localmente com `git pull origin main` antes de prosseguir.
+

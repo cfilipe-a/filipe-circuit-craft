@@ -1,4 +1,4 @@
-# Filipe Circuit Craft
+# Filipe Cavalcante — Portfólio
 
 Quero iniciar a construção do site, aplicando essa arquitetura e identidade visual com Tailwind e componentes responsivos. Foque apenas na criação do designer, sobre as funções dos botões não serão implementados.
 

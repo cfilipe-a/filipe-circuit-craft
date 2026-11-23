@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SOCIAL_LINKS, openEmail, openWhatsApp } from "@/utils/contact";
 import { useState } from "react";
 import {
   ArrowRight, Download, Cpu, CircuitBoard, Activity, BarChart3, Menu, X, Mail, Linkedin,
@@ -134,8 +135,8 @@ function Hero() {
             <button className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm font-medium transition hover:border-primary/50">
               <Download className="h-4 w-4" /> Baixar currículo
             </button>
-            <button aria-label="LinkedIn" className="ml-2 grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Linkedin className="h-5 w-5" /></button>
-            <button aria-label="GitHub" className="grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Github className="h-5 w-5" /></button>
+            <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="ml-2 grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Linkedin className="h-5 w-5" /></a>
+            <a href={SOCIAL_LINKS.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Github className="h-5 w-5" /></a>
           </div>
         </div>
       </div>
@@ -329,11 +330,11 @@ function Tools() {
   );
 }
 
-const contacts = [
-  { icon: Mail, t: "E-mail", d: "contato@filipecavalcante.com.br" },
-  { icon: Linkedin, t: "LinkedIn", d: "/in/filipecavalcante" },
-  { icon: Github, t: "GitHub", d: "@filipecavalcante" },
-  { icon: MessageCircle, t: "WhatsApp", d: "Enviar mensagem" },
+const contacts: { icon: typeof Mail; t: string; d: string; href?: string; onClick?: () => void }[] = [
+  { icon: Mail, t: "E-mail", d: "Clique para enviar um e-mail", onClick: openEmail },
+  { icon: Linkedin, t: "LinkedIn", d: "Conectar no LinkedIn", href: SOCIAL_LINKS.linkedin },
+  { icon: Github, t: "GitHub", d: "Acessar repositórios", href: SOCIAL_LINKS.github },
+  { icon: MessageCircle, t: "WhatsApp", d: "Iniciar conversa no WhatsApp", onClick: openWhatsApp },
 ];
 
 function Contact() {
@@ -343,16 +344,22 @@ function Contact() {
       <div className="relative mx-auto max-w-6xl px-5">
         <SectionHead tag="contato" title={<>Vamos conversar sobre seu <span className="text-gradient">próximo projeto</span></>} desc="Busco oportunidades em P&D, hardware e sistemas embarcados." />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {contacts.map(({ icon: I, t, d }) => (
-            <button key={t} className="card-hover group rounded-2xl border bg-card p-6 text-left">
+          {contacts.map(({ icon: I, t, d, href, onClick }) => {
+            const cls = "card-hover group block w-full cursor-pointer rounded-2xl border bg-card p-6 text-left";
+            const inner = (<>
               <div className="flex items-center justify-between">
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary"><I className="h-5 w-5" /></span>
                 <ExternalLink className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
               </div>
               <p className="mt-5 font-semibold">{t}</p>
               <p className="mt-1 truncate font-mono text-xs text-muted-foreground">{d}</p>
-            </button>
-          ))}
+            </>);
+            return href ? (
+              <a key={t} href={href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+            ) : (
+              <button key={t} type="button" onClick={onClick} className={cls}>{inner}</button>
+            );
+          })}
         </div>
       </div>
     </section>

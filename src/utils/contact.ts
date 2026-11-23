@@ -49,3 +49,13 @@ export function downloadResume() {
   a.click();
   a.remove();
 }
+
+// Copia o e-mail decodificado para a área de transferência (fallback do botão de e-mail).
+export async function copyEmail(): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(atob(EMAIL_B64));
+    return true;
+  } catch {
+    return false;
+  }
+}

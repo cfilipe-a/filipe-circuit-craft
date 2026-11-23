@@ -114,3 +114,16 @@
   -ms-overflow-style: none;
   &::-webkit-scrollbar { display: none; }
 }
+
+/* Layout v2 (editorial) tokens */
+@theme {
+  --color-ed-bg: #09090b;
+  --color-ed-bg2: #111114;
+  --color-ed-line: rgb(39 39 42 / 0.7);
+  --color-ed-line-strong: #3f3f46;
+  --color-ed-fg: #fafafa;
+  --color-ed-muted: #a1a1aa;
+  --color-ed-accent: #f59e0b;
+  --color-ed-accent-hover: #d97706;
+  --color-ed-ink: #09090b;
+}

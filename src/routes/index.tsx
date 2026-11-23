@@ -200,7 +200,7 @@ function Projects() {
           ))}
         </div>
         <div className="mt-10 text-center">
-          <button type="button" onClick={downloadResume} className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm transition hover:border-primary/50">
+          <button className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm transition hover:border-primary/50">
             <Github className="h-4 w-4" /> Ver mais no GitHub
           </button>
         </div>

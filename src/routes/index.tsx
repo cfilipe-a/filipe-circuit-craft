@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SOCIAL_LINKS, openEmail, openWhatsApp } from "@/utils/contact";
+import { SOCIAL_LINKS, openEmail, openWhatsApp, downloadResume } from "@/utils/contact";
 import { useState } from "react";
 import {
   ArrowRight, Download, Cpu, CircuitBoard, Activity, BarChart3, Menu, X, Mail, Linkedin,
@@ -132,7 +132,7 @@ function Hero() {
             <a href="#projetos" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:brightness-110">
               Ver projetos <ArrowRight className="h-4 w-4" />
             </a>
-            <button className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm font-medium transition hover:border-primary/50">
+            <button type="button" onClick={downloadResume} className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm font-medium transition hover:border-primary/50">
               <Download className="h-4 w-4" /> Baixar currículo
             </button>
             <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="ml-2 grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Linkedin className="h-5 w-5" /></a>
@@ -200,7 +200,7 @@ function Projects() {
           ))}
         </div>
         <div className="mt-10 text-center">
-          <button className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm transition hover:border-primary/50">
+          <button type="button" onClick={downloadResume} className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm transition hover:border-primary/50">
             <Github className="h-4 w-4" /> Ver mais no GitHub
           </button>
         </div>

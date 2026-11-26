@@ -45,7 +45,7 @@ function resolveActiveSection(): SectionId {
   const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
 
   if (y < 80) return "inicio";
-  if (maxScroll > 0 && y >= maxScroll - 40) return "contato";
+  if (maxScroll > 0 && y >= maxScroll - 24) return "contato";
 
   const anchorY = Math.max(120, Math.min(window.innerHeight * 0.35, 260));
   let current: SectionId = "inicio";
@@ -164,6 +164,7 @@ function Header() {
 
     syncActiveSection();
     window.addEventListener("scroll", scheduleSync, { passive: true });
+    window.addEventListener("scrollend", scheduleSync, { passive: true });
     window.addEventListener("resize", scheduleSync, { passive: true });
     window.addEventListener("hashchange", scheduleSync);
 
@@ -184,6 +185,7 @@ function Header() {
 
     return () => {
       window.removeEventListener("scroll", scheduleSync);
+      window.removeEventListener("scrollend", scheduleSync);
       window.removeEventListener("resize", scheduleSync);
       window.removeEventListener("hashchange", scheduleSync);
       if (rafId) window.cancelAnimationFrame(rafId);
@@ -217,7 +219,8 @@ function Header() {
       <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px]">
         <div
           data-testid="scroll-progress"
-          className="h-full origin-left bg-ed-accent/85 transition-transform duration-300 ease-out"
+          data-section={activeId}
+          className="h-full origin-left bg-ed-accent/85 transition-transform duration-200 ease-out"
           style={{ transform: `scaleX(${progress})` }}
         />
       </div>
@@ -237,12 +240,12 @@ function Header() {
                   key={n.href}
                   href={n.href}
                   aria-current={isActive ? "location" : undefined}
-                  className={`relative py-1 text-sm transition-colors duration-200 ${isActive ? "text-ed-fg" : "text-ed-muted hover:text-ed-fg"}`}
+                  className={`relative py-1 text-sm transition-colors duration-200 ease-out ${isActive ? "text-ed-fg" : "text-ed-muted hover:text-ed-fg"}`}
                 >
                   {n.label}
                   <span
                     aria-hidden="true"
-                    className={`absolute inset-x-0 -bottom-0.5 h-[2px] bg-ed-accent transition-opacity duration-200 ${isActive ? "opacity-100" : "opacity-0"}`}
+                    className={`absolute inset-x-0 -bottom-0.5 h-[2px] bg-ed-accent transition-opacity duration-200 ease-out ${isActive ? "opacity-100" : "opacity-0"}`}
                   />
                 </a>
               );
@@ -276,7 +279,7 @@ function Header() {
                     tabIndex={open ? 0 : -1}
                     aria-current={isActive ? "location" : undefined}
                     onClick={() => setOpen(false)}
-                    className={`block border-l-2 py-3 pl-3 text-sm transition-colors duration-150 ${isActive ? "border-ed-accent text-ed-fg" : "border-transparent text-ed-muted hover:text-ed-fg"}`}
+                    className={`block border-l-2 py-3 pl-3 text-sm transition-colors duration-200 ease-out ${isActive ? "border-ed-accent text-ed-fg" : "border-transparent text-ed-muted hover:text-ed-fg"}`}
                   >
                     {n.label}
                   </a>

@@ -204,6 +204,7 @@ describe("Home refinements", () => {
     await renderHome();
 
     const bar = screen.getByTestId("scroll-progress");
+    expect(bar).toHaveAttribute("data-section", "inicio");
     expect(bar).toHaveStyle({ transform: "scaleX(0.2)" });
 
     const desktopNav = screen.getByRole("navigation", { name: "Navegação principal" });
@@ -241,23 +242,28 @@ describe("Home refinements", () => {
       configurable: true,
     });
 
-    const scrollToY = (y: number) => {
+    const scrollToY = (y: number, eventName: "scroll" | "scrollend" | "hashchange" = "scroll") => {
       Object.defineProperty(window, "scrollY", {
         value: y,
         writable: true,
         configurable: true,
       });
-      fireEvent.scroll(window);
+      if (eventName === "scroll") fireEvent.scroll(window);
+      else fireEvent(window, new Event(eventName));
     };
 
     try {
       // Still within Hero (< 80px)
       scrollToY(40);
-      await waitFor(() => expect(bar).toHaveStyle({ transform: "scaleX(0.2)" }));
+      await waitFor(() => {
+        expect(bar).toHaveAttribute("data-section", "inicio");
+        expect(bar).toHaveStyle({ transform: "scaleX(0.2)" });
+      });
 
       // Reaches Projetos
       scrollToY(650);
       await waitFor(() => {
+        expect(bar).toHaveAttribute("data-section", "projetos");
         expect(bar).toHaveStyle({ transform: "scaleX(0.4)" });
         expect(within(desktopNav).getByRole("link", { name: "Projetos" })).toHaveAttribute(
           "aria-current",
@@ -268,13 +274,22 @@ describe("Home refinements", () => {
         ).toHaveAttribute("aria-current", "location");
       });
 
-      // Small scroll inside Projetos does not alter progress continuously
-      scrollToY(760);
-      await waitFor(() => expect(bar).toHaveStyle({ transform: "scaleX(0.4)" }));
+      // Two sections simultaneously visible (Competências entering lower viewport at top=500 > anchorY):
+      // stays stably on Projetos with no premature flip or oscillation
+      scrollToY(1100);
+      await waitFor(() => {
+        expect(bar).toHaveAttribute("data-section", "projetos");
+        expect(bar).toHaveStyle({ transform: "scaleX(0.4)" });
+        expect(within(desktopNav).getByRole("link", { name: "Projetos" })).toHaveAttribute(
+          "aria-current",
+          "location",
+        );
+      });
 
       // Reaches Competências
       scrollToY(1450);
       await waitFor(() => {
+        expect(bar).toHaveAttribute("data-section", "competencias");
         expect(bar).toHaveStyle({ transform: "scaleX(0.6)" });
         expect(within(desktopNav).getByRole("link", { name: "Competências" })).toHaveAttribute(
           "aria-current",
@@ -285,6 +300,7 @@ describe("Home refinements", () => {
       // Reaches Trajetória
       scrollToY(2250);
       await waitFor(() => {
+        expect(bar).toHaveAttribute("data-section", "trajetoria");
         expect(bar).toHaveStyle({ transform: "scaleX(0.8)" });
         expect(within(desktopNav).getByRole("link", { name: "Trajetória" })).toHaveAttribute(
           "aria-current",
@@ -293,8 +309,9 @@ describe("Home refinements", () => {
       });
 
       // Reaches Contato (bottom)
-      scrollToY(3200);
+      scrollToY(3210);
       await waitFor(() => {
+        expect(bar).toHaveAttribute("data-section", "contato");
         expect(bar).toHaveStyle({ transform: "scaleX(1)" });
         expect(within(desktopNav).getByRole("link", { name: "Contato" })).toHaveAttribute(
           "aria-current",
@@ -305,9 +322,20 @@ describe("Home refinements", () => {
         ).toHaveAttribute("aria-current", "location");
       });
 
-      // Scrolls back up to Projetos and Inicio
-      scrollToY(700);
+      // Fast jump back up via hashchange/scrollend settles directly on Competências -> Hero
+      scrollToY(1500, "hashchange");
       await waitFor(() => {
+        expect(bar).toHaveAttribute("data-section", "competencias");
+        expect(bar).toHaveStyle({ transform: "scaleX(0.6)" });
+        expect(within(desktopNav).getByRole("link", { name: "Competências" })).toHaveAttribute(
+          "aria-current",
+          "location",
+        );
+      });
+
+      scrollToY(700, "scrollend");
+      await waitFor(() => {
+        expect(bar).toHaveAttribute("data-section", "projetos");
         expect(bar).toHaveStyle({ transform: "scaleX(0.4)" });
         expect(within(desktopNav).getByRole("link", { name: "Projetos" })).toHaveAttribute(
           "aria-current",
@@ -317,6 +345,7 @@ describe("Home refinements", () => {
 
       scrollToY(0);
       await waitFor(() => {
+        expect(bar).toHaveAttribute("data-section", "inicio");
         expect(bar).toHaveStyle({ transform: "scaleX(0.2)" });
         expect(within(desktopNav).queryByRole("link", { current: "location" })).not.toBeInTheDocument();
       });

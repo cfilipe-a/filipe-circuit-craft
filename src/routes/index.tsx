@@ -144,6 +144,9 @@ function PcbIllustration() {
 function Hero() {
   return (
     <section id="inicio" className="bg-ed-bg pt-16">
+      <p className="pt-4 text-center font-mono text-xs uppercase tracking-[0.2em] text-ed-accent">
+        Production branch
+      </p>
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-2 md:py-24">
         <div className="flex justify-center md:order-2"><PcbIllustration /></div>
         <div className="md:order-1">

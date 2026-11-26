@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { openEmail, openWhatsApp, downloadResume, copyEmail, SOCIAL_LINKS } from "@/utils/contact";
+import imgEsp32 from "@/assets/proj-esp32.jpg";
+import imgStm32 from "@/assets/proj-stm32.jpg";
+import imgIot from "@/assets/proj-iot.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,6 +29,43 @@ const nav = [
   { href: "#contato", label: "Contato" },
 ];
 
+const observedSections = ["inicio", "projetos", "competencias", "trajetoria", "contato"];
+
+function useSectionReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [state, setState] = useState<"visible" | "hidden">("visible");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ||
+      typeof IntersectionObserver === "undefined"
+    ) {
+      return;
+    }
+
+    const el = ref.current;
+    if (!el) return;
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.95) return;
+
+    setState("hidden");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setState("visible");
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, state };
+}
+
 function Brand({ className = "" }: { className?: string }) {
   return (
     <span className={`font-mono text-lg font-bold tracking-tight text-ed-fg ${className}`}>
@@ -43,10 +83,28 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Section({ id, alt, children }: { id?: string; alt?: boolean; children: React.ReactNode }) {
+function Section({
+  id,
+  alt,
+  bgOverlay,
+  children,
+}: {
+  id?: string;
+  alt?: boolean;
+  bgOverlay?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const { ref, state } = useSectionReveal();
   return (
-    <section id={id} className={`scroll-mt-16 border-t border-ed-line py-20 sm:py-24 ${alt ? "bg-ed-bg2" : "bg-ed-bg"}`}>
-      <div className="mx-auto max-w-6xl px-5">{children}</div>
+    <section id={id} className={`relative overflow-hidden scroll-mt-16 border-t border-ed-line py-20 sm:py-24 ${alt ? "bg-ed-bg2" : "bg-ed-bg"}`}>
+      {bgOverlay}
+      <div
+        ref={ref}
+        data-reveal={state}
+        className={`relative z-10 mx-auto max-w-6xl px-5 transition-[opacity,transform] duration-500 ease-out ${state === "hidden" ? "translate-y-3 opacity-0" : "translate-y-0 opacity-100"}`}
+      >
+        {children}
+      </div>
     </section>
   );
 }
@@ -57,27 +115,159 @@ function H2({ children }: { children: React.ReactNode }) {
 
 function Header() {
   const [open, setOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [activeId, setActiveId] = useState<string>("inicio");
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let rafId = 0;
+
+    const updateOnScroll = () => {
+      rafId = 0;
+      const y = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(maxScroll > 0 ? Math.min(1, Math.max(0, y / maxScroll)) : 0);
+
+      if (y < 72) {
+        setHidden(false);
+      } else if (y - lastScrollY.current > 8) {
+        setHidden(true);
+      } else if (lastScrollY.current - y > 6) {
+        setHidden(false);
+      }
+      lastScrollY.current = y;
+
+      if (y < 80) {
+        setActiveId("inicio");
+      } else if (maxScroll > 0 && y >= maxScroll - 40) {
+        setActiveId("contato");
+      }
+    };
+
+    const onScroll = () => {
+      if (!rafId) rafId = window.requestAnimationFrame(updateOnScroll);
+    };
+
+    lastScrollY.current = window.scrollY;
+    updateOnScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof IntersectionObserver === "undefined") return;
+    const elements = observedSections
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id);
+          }
+        }
+      },
+      { rootMargin: "-30% 0px -55% 0px", threshold: [0, 0.25] },
+    );
+
+    for (const el of elements) observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        menuBtnRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-ed-line bg-ed-bg/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <a href="#inicio" aria-label="Início"><Brand /></a>
-        <nav className="hidden gap-8 md:flex">
-          {nav.map((n) => (
-            <a key={n.href} href={n.href} className="text-sm text-ed-muted transition hover:text-ed-fg">{n.label}</a>
-          ))}
-        </nav>
-        <button className="text-ed-fg md:hidden" aria-label="Abrir menu" onClick={() => setOpen((o) => !o)}>
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+    <>
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px]">
+        <div
+          data-testid="scroll-progress"
+          className="h-full origin-left bg-ed-accent/85 transition-transform duration-75 ease-out"
+          style={{ transform: `scaleX(${progress})` }}
+        />
       </div>
-      {open && (
-        <nav className="border-t border-ed-line bg-ed-bg px-5 py-4 md:hidden">
-          {nav.map((n) => (
-            <a key={n.href} href={n.href} onClick={() => setOpen(false)} className="block py-3 text-ed-muted hover:text-ed-fg">{n.label}</a>
-          ))}
-        </nav>
-      )}
-    </header>
+      <header
+        className={`fixed inset-x-0 top-0 z-50 border-b border-ed-line bg-ed-bg/85 backdrop-blur transition-transform duration-200 ease-out focus-within:translate-y-0 ${hidden && !open ? "-translate-y-full" : "translate-y-0"}`}
+      >
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+          <a href="#inicio" aria-label="Início" className="rounded-sm transition hover:opacity-90">
+            <Brand />
+          </a>
+          <nav aria-label="Navegação principal" className="hidden gap-8 md:flex">
+            {nav.map((n) => {
+              const isActive = activeId === n.href.slice(1);
+              return (
+                <a
+                  key={n.href}
+                  href={n.href}
+                  aria-current={isActive ? "location" : undefined}
+                  className={`relative py-1 text-sm transition-colors duration-200 ${isActive ? "text-ed-fg" : "text-ed-muted hover:text-ed-fg"}`}
+                >
+                  {n.label}
+                  <span
+                    aria-hidden="true"
+                    className={`absolute inset-x-0 -bottom-0.5 h-[2px] bg-ed-accent transition-opacity duration-200 ${isActive ? "opacity-100" : "opacity-0"}`}
+                  />
+                </a>
+              );
+            })}
+          </nav>
+          <button
+            ref={menuBtnRef}
+            type="button"
+            className="rounded-md p-1.5 text-ed-fg transition hover:bg-ed-bg2 active:scale-95 md:hidden"
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            onClick={() => setOpen((o) => !o)}
+          >
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+        <div
+          id="mobile-nav"
+          aria-hidden={!open}
+          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out md:hidden ${open ? "grid-rows-[1fr] opacity-100" : "pointer-events-none grid-rows-[0fr] opacity-0"}`}
+        >
+          <nav aria-label="Navegação mobile" className="overflow-hidden border-t border-ed-line bg-ed-bg px-5">
+            <div className="py-3">
+              {nav.map((n) => {
+                const isActive = activeId === n.href.slice(1);
+                return (
+                  <a
+                    key={n.href}
+                    href={n.href}
+                    tabIndex={open ? 0 : -1}
+                    aria-current={isActive ? "location" : undefined}
+                    onClick={() => setOpen(false)}
+                    className={`block border-l-2 py-3 pl-3 text-sm transition-colors duration-150 ${isActive ? "border-ed-accent text-ed-fg" : "border-transparent text-ed-muted hover:text-ed-fg"}`}
+                  >
+                    {n.label}
+                  </a>
+                );
+              })}
+            </div>
+          </nav>
+        </div>
+      </header>
+    </>
   );
 }
 
@@ -143,11 +333,12 @@ function PcbIllustration() {
 
 function Hero() {
   return (
-    <section id="inicio" className="bg-ed-bg pt-16">
-      <p className="pt-4 text-center font-mono text-xs uppercase tracking-[0.2em] text-ed-accent">
-        Production branch
-      </p>
-      <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-2 md:py-24">
+    <section id="inicio" className="relative overflow-hidden scroll-mt-16 bg-ed-bg pt-16">
+      <div
+        aria-hidden="true"
+        className="line-grid pointer-events-none absolute inset-0 opacity-70 [mask-image:radial-gradient(ellipse_75%_65%_at_50%_42%,black_30%,transparent_95%)]"
+      />
+      <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-2 md:py-24">
         <div className="flex justify-center md:order-2"><PcbIllustration /></div>
         <div className="md:order-1">
           <Eyebrow>Engenharia Elétrica • Hardware &amp; Confiabilidade</Eyebrow>
@@ -155,7 +346,10 @@ function Hero() {
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-ed-muted">
             Engenharia eletrônica, sistemas embarcados e análise de confiabilidade do componente ao dado.
           </p>
-          <a href="#contato" className="mt-10 inline-flex w-full items-center justify-center rounded-lg bg-ed-accent px-6 py-3.5 font-semibold text-ed-ink transition hover:bg-ed-accent-hover sm:w-auto">
+          <a
+            href="#contato"
+            className="mt-10 inline-flex w-full items-center justify-center rounded-lg bg-ed-accent px-6 py-3.5 font-semibold text-ed-ink transition duration-200 hover:bg-ed-accent-hover active:scale-[0.98] sm:w-auto"
+          >
             Entrar em contato
           </a>
         </div>
@@ -165,14 +359,19 @@ function Hero() {
 }
 
 function Metrics() {
+  const { ref, state } = useSectionReveal();
   const items = [
     ["7+", "Anos de bancada"],
-    ["CRT-SP", "Conselho Federal dos Técnicos Industriais · Ativo"],
+    ["CRT-SP", "Conselho Regional dos Técnicos Industriais de São Paulo · Ativo"],
     ["Eng. Elétrica", "Centro Universitário ENIAC (em andamento)"],
   ];
   return (
     <section className="border-t border-ed-line bg-ed-bg2">
-      <div className="mx-auto grid max-w-6xl divide-y divide-ed-line px-5 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <div
+        ref={ref}
+        data-reveal={state}
+        className={`mx-auto grid max-w-6xl divide-y divide-ed-line px-5 transition-[opacity,transform] duration-500 ease-out sm:grid-cols-3 sm:divide-x sm:divide-y-0 ${state === "hidden" ? "translate-y-3 opacity-0" : "translate-y-0 opacity-100"}`}
+      >
         {items.map(([a, b]) => (
           <div key={a} className="py-10 sm:px-8 sm:first:pl-0">
             <p className="font-display text-3xl font-semibold text-ed-fg">{a}</p>
@@ -185,49 +384,142 @@ function Metrics() {
 }
 
 type Stage = "Lab / Protótipo" | "Validado em Bancada" | "Em Produção";
-const projects: { cat: string; t: string; stage: Stage; d: string; tags: string[] }[] = [
-  { cat: "Embarcados", t: "Controlador IoT com ESP32", stage: "Validado em Bancada", d: "Placa dedicada com ESP32, medição de corrente e envio MQTT com reconexão automática para monitorar cargas remotamente.", tags: ["ESP32", "C++", "MQTT"] },
-  { cat: "Hardware & PCB", t: "Placa de aquisição STM32", stage: "Lab / Protótipo", d: "Layout 4 camadas com plano de terra dedicado, filtragem e ADC com DMA para leituras em ambiente industrial ruidoso.", tags: ["STM32", "Altium", "4 camadas"] },
-  { cat: "Dados", t: "Dashboard de telemetria", stage: "Em Produção", d: "Pipeline de coleta, banco de séries temporais e painéis em Power BI para análise histórica de sensores.", tags: ["Python", "Power BI", "SQL"] },
+type ProjectItem = { cat: string; t: string; stage: Stage; d: string; tags: string[]; img?: string | undefined };
+
+const projects: ProjectItem[] = [
+  { cat: "Embarcados", t: "Controlador IoT com ESP32", stage: "Validado em Bancada", d: "Placa dedicada com ESP32, medição de corrente e envio MQTT com reconexão automática para monitorar cargas remotamente.", tags: ["ESP32", "C++", "MQTT"], img: imgEsp32 },
+  { cat: "Hardware & PCB", t: "Placa de aquisição STM32", stage: "Lab / Protótipo", d: "Layout 4 camadas com plano de terra dedicado, filtragem e ADC com DMA para leituras em ambiente industrial ruidoso.", tags: ["STM32", "Altium", "4 camadas"], img: imgStm32 },
+  { cat: "Dados", t: "Dashboard de telemetria", stage: "Em Produção", d: "Pipeline de coleta, banco de séries temporais e painéis em Power BI para análise histórica de sensores.", tags: ["Python", "Power BI", "SQL"], img: imgIot },
 ];
 const filters = ["Todos", "Hardware & PCB", "Embarcados", "Dados"];
+
+function ProjectMedia({ img, title, cat }: { img?: string | undefined; title: string; cat: string }) {
+  if (img) {
+    return (
+      <img
+        src={img}
+        alt={title}
+        width={1024}
+        height={768}
+        loading="lazy"
+        className="project-img h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-ed-bg p-4">
+      <div className="text-center font-mono text-xs text-ed-muted">
+        <span className="block text-[10px] uppercase tracking-[0.2em] text-ed-accent">{cat}</span>
+        <span className="mt-1 block">{title}</span>
+      </div>
+    </div>
+  );
+}
 
 function Projects() {
   const [f, setF] = useState("Todos");
   const list = projects.filter((p) => f === "Todos" || p.cat === f);
+  const [featured, ...secondary] = list;
+
   return (
-    <Section id="projetos">
+    <Section
+      id="projetos"
+      bgOverlay={
+        <div
+          aria-hidden="true"
+          className="line-grid pointer-events-none absolute inset-0 opacity-35 [mask-image:radial-gradient(ellipse_80%_70%_at_50%_30%,black_15%,transparent_92%)]"
+        />
+      }
+    >
       <Eyebrow>Projetos</Eyebrow>
       <H2>Projetos em destaque</H2>
-      <div className="mt-8 flex gap-2 overflow-x-auto scrollbar-none">
+      <div className="mt-8 flex flex-wrap gap-2">
         {filters.map((x) => (
-          <button key={x} onClick={() => setF(x)} className={`shrink-0 rounded-full border px-4 py-1.5 font-mono text-xs transition ${f === x ? "border-ed-accent text-ed-accent" : "border-ed-line-strong text-ed-muted hover:text-ed-fg"}`}>
+          <button
+            key={x}
+            type="button"
+            aria-pressed={f === x}
+            onClick={() => setF(x)}
+            className={`shrink-0 rounded-full border bg-ed-bg px-4 py-1.5 font-mono text-xs transition duration-200 active:scale-[0.98] ${f === x ? "border-ed-accent text-ed-accent" : "border-ed-line-strong text-ed-muted hover:border-ed-muted hover:text-ed-fg"}`}
+          >
             {x}
           </button>
         ))}
       </div>
-      <ul className="mt-6 border-t border-ed-line">
-        {list.map((p) => (
-          <li key={p.t} className="group border-b border-ed-line py-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-10">
-              <div className="max-w-2xl">
+
+      {featured && (
+        <article className="project-card group relative mt-8 overflow-hidden rounded-xl border border-ed-line bg-ed-bg2 transition duration-200 hover:-translate-y-0.5 hover:border-ed-line-strong focus-within:ring-2 focus-within:ring-ed-accent">
+          <div className="grid md:grid-cols-[1.1fr_1fr]">
+            <div className="aspect-[16/10] overflow-hidden bg-ed-bg md:aspect-auto md:min-h-[280px]">
+              <ProjectMedia img={featured.img} title={featured.t} cat={featured.cat} />
+            </div>
+            <div className="flex flex-col justify-between p-6 sm:p-8">
+              <div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <h3 className="text-xl font-semibold text-ed-fg">{p.t}</h3>
-                  <span className="rounded border border-ed-line-strong px-2 py-0.5 font-mono text-[11px] text-ed-muted">{p.stage}</span>
+                  <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ed-accent">{featured.cat}</span>
+                  <span className="rounded border border-ed-line-strong px-2 py-0.5 font-mono text-[11px] text-ed-muted">{featured.stage}</span>
                 </div>
-                <p className="mt-3 line-clamp-2 text-ed-muted">{p.d}</p>
-                <div className="mt-4 flex flex-wrap gap-4 font-mono text-xs text-ed-muted/80">
-                  {p.tags.map((t) => <span key={t}>#{t}</span>)}
+                <h3 className="mt-3 text-2xl font-semibold text-ed-fg sm:text-[1.65rem]">{featured.t}</h3>
+                <p className="mt-3 leading-relaxed text-ed-muted">{featured.d}</p>
+                <div className="mt-5 flex flex-wrap gap-4 font-mono text-xs text-ed-muted/80">
+                  {featured.tags.map((t) => <span key={t}>#{t}</span>)}
                 </div>
               </div>
-              <Link to="/projetos/$slug" params={{ slug: "exemplo" }} className="inline-flex shrink-0 items-center gap-2 text-sm font-medium text-ed-accent transition group-hover:gap-3">
+              <Link
+                to="/projetos/$slug"
+                params={{ slug: "exemplo" }}
+                className="mt-6 inline-flex w-fit items-center gap-2 text-sm font-medium text-ed-accent transition group-hover:gap-3 after:absolute after:inset-0"
+              >
                 Ver detalhes <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-          </li>
-        ))}
-      </ul>
-      <a href={SOCIAL_LINKS.github} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 text-sm text-ed-muted hover:text-ed-fg">
+          </div>
+        </article>
+      )}
+
+      {secondary.length > 0 && (
+        <ul className="mt-6 divide-y divide-ed-line border-y border-ed-line">
+          {secondary.map((p) => (
+            <li
+              key={p.t}
+              className="project-card group relative -mx-3 rounded-lg bg-ed-bg/90 px-3 py-6 transition duration-200 hover:bg-ed-bg2/90 focus-within:ring-2 focus-within:ring-ed-accent"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+                  <div className="aspect-[16/10] w-full shrink-0 overflow-hidden rounded-lg border border-ed-line bg-ed-bg sm:h-24 sm:w-36 sm:aspect-auto">
+                    <ProjectMedia img={p.img} title={p.t} cat={p.cat} />
+                  </div>
+                  <div className="max-w-xl">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-lg font-semibold text-ed-fg">{p.t}</h3>
+                      <span className="rounded border border-ed-line-strong px-2 py-0.5 font-mono text-[11px] text-ed-muted">{p.stage}</span>
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-sm text-ed-muted">{p.d}</p>
+                    <div className="mt-3 flex flex-wrap gap-4 font-mono text-xs text-ed-muted/80">
+                      {p.tags.map((t) => <span key={t}>#{t}</span>)}
+                    </div>
+                  </div>
+                </div>
+                <Link
+                  to="/projetos/$slug"
+                  params={{ slug: "exemplo" }}
+                  className="inline-flex shrink-0 items-center gap-2 text-sm font-medium text-ed-accent transition group-hover:gap-3 after:absolute after:inset-0"
+                >
+                  Ver detalhes <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <a
+        href={SOCIAL_LINKS.github}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-8 inline-flex items-center gap-2 text-sm text-ed-muted transition hover:text-ed-fg"
+      >
         Ver todos os projetos no GitHub <ArrowRight className="h-4 w-4" />
       </a>
     </Section>
@@ -249,14 +541,29 @@ function Skills() {
     <Section id="competencias" alt>
       <Eyebrow>Competências</Eyebrow>
       <H2>Áreas de atuação</H2>
-      <div className="mt-8 flex gap-6 overflow-x-auto border-b border-ed-line scrollbar-none">
+      <div
+        role="tablist"
+        aria-label="Categorias de competências"
+        className="mt-8 flex flex-wrap gap-2 border-b border-ed-line pb-4 lg:flex-nowrap lg:gap-6 lg:pb-0"
+      >
         {skills.map((s, k) => (
-          <button key={s.t} onClick={() => setI(k)} className={`-mb-px shrink-0 border-b-2 pb-3 text-sm transition ${k === i ? "border-ed-accent text-ed-fg" : "border-transparent text-ed-muted hover:text-ed-fg"}`}>
+          <button
+            key={s.t}
+            type="button"
+            role="tab"
+            aria-selected={k === i}
+            onClick={() => setI(k)}
+            className={`rounded-md border px-3 py-2 text-left text-xs leading-snug transition duration-200 active:scale-[0.98] sm:text-sm lg:-mb-px lg:shrink-0 lg:rounded-none lg:border-0 lg:border-b-2 lg:bg-transparent lg:px-0 lg:pb-3 lg:pt-0 ${
+              k === i
+                ? "border-ed-accent bg-ed-accent/10 text-ed-fg lg:border-ed-accent"
+                : "border-ed-line-strong text-ed-muted hover:border-ed-muted hover:text-ed-fg lg:border-transparent"
+            }`}
+          >
             {s.t}
           </button>
         ))}
       </div>
-      <ul className="mt-8 grid gap-x-12 sm:grid-cols-2">
+      <ul role="tabpanel" className="mt-8 grid gap-x-12 sm:grid-cols-2">
         {cur.items.map((x) => (
           <li key={x} className="flex items-center gap-3 border-b border-ed-line py-4 text-ed-fg">
             <span className="h-1 w-1 bg-ed-accent" />{x}
@@ -332,10 +639,18 @@ function Contact() {
         Respondo rápido pelo WhatsApp ou e-mail. Conte um pouco sobre o desafio e seguimos a partir daí.
       </p>
       <div className="mt-10 flex max-w-md flex-col gap-3">
-        <button onClick={openWhatsApp} className="rounded-lg bg-ed-accent px-6 py-3.5 font-semibold text-ed-ink transition hover:bg-ed-accent-hover">
+        <button
+          type="button"
+          onClick={openWhatsApp}
+          className="rounded-lg bg-ed-accent px-6 py-3.5 font-semibold text-ed-ink transition duration-200 hover:bg-ed-accent-hover active:scale-[0.98]"
+        >
           Falar no WhatsApp
         </button>
-        <button onClick={handleEmail} className="rounded-lg border border-ed-line-strong px-6 py-3.5 font-medium text-ed-fg transition hover:border-ed-muted">
+        <button
+          type="button"
+          onClick={handleEmail}
+          className="rounded-lg border border-ed-line-strong px-6 py-3.5 font-medium text-ed-fg transition duration-200 hover:border-ed-muted active:scale-[0.98]"
+        >
           Enviar e-mail
         </button>
       </div>
@@ -364,13 +679,13 @@ function Footer() {
             {nav.map((n) => <li key={n.href}><a href={n.href} className={linkCls}>{n.label}</a></li>)}
           </FootCol>
           <FootCol title="Links & Currículo">
-            <li><button onClick={downloadResume} className={linkCls}>Baixar currículo (PDF)</button></li>
+            <li><button type="button" onClick={downloadResume} className={linkCls}>Baixar currículo (PDF)</button></li>
             <li><a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" className={linkCls}>LinkedIn</a></li>
             <li><a href={SOCIAL_LINKS.github} target="_blank" rel="noopener noreferrer" className={linkCls}>GitHub</a></li>
           </FootCol>
           <FootCol title="Contato">
-            <li><button onClick={openWhatsApp} className={linkCls}>WhatsApp</button></li>
-            <li><button onClick={handleEmail} className={linkCls}>E-mail</button></li>
+            <li><button type="button" onClick={openWhatsApp} className={linkCls}>WhatsApp</button></li>
+            <li><button type="button" onClick={handleEmail} className={linkCls}>E-mail</button></li>
           </FootCol>
         </div>
         <p className="mt-14 border-t border-ed-line pt-6 text-xs text-ed-muted">© 2026 Filipe Cavalcante. Todos os direitos reservados.</p>

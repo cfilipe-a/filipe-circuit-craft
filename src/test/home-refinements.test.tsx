@@ -359,4 +359,177 @@ describe("Home refinements", () => {
       }
     }
   });
+
+  it("aligns top progress bar right edge with active desktop header item and falls back on mobile", async () => {
+    const originalScrollHeightDesc = Object.getOwnPropertyDescriptor(
+      document.documentElement,
+      "scrollHeight",
+    );
+    const originalScrollYDesc = Object.getOwnPropertyDescriptor(window, "scrollY");
+
+    Object.defineProperty(window, "scrollY", {
+      value: 0,
+      writable: true,
+      configurable: true,
+    });
+
+    await renderHome();
+
+    const bar = screen.getByTestId("scroll-progress");
+    const track = bar.parentElement as HTMLDivElement;
+    const header = document.querySelector("header")!;
+    const desktopNav = screen.getByRole("navigation", { name: "Navegação principal" });
+    const logoLink = within(header).getByRole("link", { name: "Início" });
+    const projLink = within(desktopNav).getByRole("link", { name: "Projetos" });
+    const compLink = within(desktopNav).getByRole("link", { name: "Competências" });
+    const trajLink = within(desktopNav).getByRole("link", { name: "Trajetória" });
+    const contLink = within(desktopNav).getByRole("link", { name: "Contato" });
+
+    let viewportWidth = 1200;
+    let desktopVisible = true;
+    let rightCoords = {
+      inicio: 140,
+      projetos: 840,
+      competencias: 960,
+      trajetoria: 1060,
+      contato: 1160,
+    };
+
+    const makeRect = (left: number, width: number): DOMRect =>
+      ({
+        left,
+        right: left + width,
+        top: 0,
+        bottom: 40,
+        width,
+        height: 40,
+        x: left,
+        y: 0,
+        toJSON: () => ({}),
+      }) as DOMRect;
+
+    const sectionTops: Record<string, number> = {
+      inicio: 0,
+      projetos: 800,
+      competencias: 1600,
+      trajetoria: 2400,
+      contato: 3200,
+    };
+
+    const spies = [
+      vi.spyOn(track, "getBoundingClientRect").mockImplementation(() => makeRect(0, viewportWidth)),
+      vi.spyOn(desktopNav, "getBoundingClientRect").mockImplementation(() =>
+        desktopVisible ? makeRect(780, 380) : makeRect(0, 0),
+      ),
+      vi.spyOn(logoLink, "getBoundingClientRect").mockImplementation(() =>
+        makeRect(40, rightCoords.inicio - 40),
+      ),
+      vi.spyOn(projLink, "getBoundingClientRect").mockImplementation(() =>
+        desktopVisible ? makeRect(rightCoords.projetos - 60, 60) : makeRect(0, 0),
+      ),
+      vi.spyOn(compLink, "getBoundingClientRect").mockImplementation(() =>
+        desktopVisible ? makeRect(rightCoords.competencias - 90, 90) : makeRect(0, 0),
+      ),
+      vi.spyOn(trajLink, "getBoundingClientRect").mockImplementation(() =>
+        desktopVisible ? makeRect(rightCoords.trajetoria - 70, 70) : makeRect(0, 0),
+      ),
+      vi.spyOn(contLink, "getBoundingClientRect").mockImplementation(() =>
+        desktopVisible ? makeRect(rightCoords.contato - 60, 60) : makeRect(0, 0),
+      ),
+      ...Object.keys(sectionTops).map((id) => {
+        const el = document.getElementById(id)!;
+        return vi.spyOn(el, "getBoundingClientRect").mockImplementation(() => {
+          const top = sectionTops[id]! - window.scrollY;
+          return {
+            top,
+            bottom: top + 500,
+            left: 0,
+            right: viewportWidth,
+            width: viewportWidth,
+            height: 500,
+            x: 0,
+            y: top,
+            toJSON: () => ({}),
+          } as DOMRect;
+        });
+      }),
+    ];
+
+    Object.defineProperty(document.documentElement, "scrollHeight", {
+      value: 4000,
+      writable: true,
+      configurable: true,
+    });
+
+    const scrollToY = (y: number) => {
+      Object.defineProperty(window, "scrollY", {
+        value: y,
+        writable: true,
+        configurable: true,
+      });
+      fireEvent.scroll(window);
+    };
+
+    try {
+      // Trigger resize to compute initial desktop alignment at 1200px
+      fireEvent(window, new Event("resize"));
+      await waitFor(() =>
+        expect(bar).toHaveStyle({ transform: `scaleX(${140 / 1200})` }),
+      );
+
+      scrollToY(650);
+      await waitFor(() =>
+        expect(bar).toHaveStyle({ transform: `scaleX(${840 / 1200})` }),
+      );
+
+      scrollToY(1450);
+      await waitFor(() =>
+        expect(bar).toHaveStyle({ transform: `scaleX(${960 / 1200})` }),
+      );
+
+      scrollToY(2250);
+      await waitFor(() =>
+        expect(bar).toHaveStyle({ transform: `scaleX(${1060 / 1200})` }),
+      );
+
+      scrollToY(3210);
+      await waitFor(() =>
+        expect(bar).toHaveStyle({ transform: `scaleX(${1160 / 1200})` }),
+      );
+
+      // Resize desktop viewport to 1440px while on Contato
+      viewportWidth = 1440;
+      rightCoords = {
+        inicio: 220,
+        projetos: 1000,
+        competencias: 1140,
+        trajetoria: 1260,
+        contato: 1360,
+      };
+      fireEvent(window, new Event("resize"));
+      await waitFor(() =>
+        expect(bar).toHaveStyle({ transform: `scaleX(${1360 / 1440})` }),
+      );
+
+      // Switch back to Projetos at 1440px
+      scrollToY(650);
+      await waitFor(() =>
+        expect(bar).toHaveStyle({ transform: `scaleX(${1000 / 1440})` }),
+      );
+
+      // Switch to mobile (desktop nav hidden, width 0) -> falls back to proportional stage (0.4)
+      desktopVisible = false;
+      viewportWidth = 390;
+      fireEvent(window, new Event("resize"));
+      await waitFor(() => expect(bar).toHaveStyle({ transform: "scaleX(0.4)" }));
+    } finally {
+      for (const spy of spies) spy.mockRestore();
+      if (originalScrollHeightDesc) {
+        Object.defineProperty(document.documentElement, "scrollHeight", originalScrollHeightDesc);
+      }
+      if (originalScrollYDesc) {
+        Object.defineProperty(window, "scrollY", originalScrollYDesc);
+      }
+    }
+  });
 });

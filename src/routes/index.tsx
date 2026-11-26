@@ -60,6 +60,25 @@ function resolveActiveSection(): SectionId {
   return current;
 }
 
+function computeSectionProgressRatio(
+  targetId: SectionId,
+  desktopNav: HTMLElement | null,
+  targetEl: HTMLAnchorElement | null | undefined,
+  trackEl: HTMLDivElement | null,
+): number {
+  const fallback = sectionProgress[targetId];
+  if (!desktopNav || !targetEl || !trackEl) return fallback;
+
+  const desktopNavRect = desktopNav.getBoundingClientRect();
+  if (desktopNavRect.width <= 0) return fallback;
+
+  const targetRect = targetEl.getBoundingClientRect();
+  const trackRect = trackEl.getBoundingClientRect();
+  if (targetRect.width <= 0 || trackRect.width <= 0) return fallback;
+
+  return Math.min(1, Math.max(0, (targetRect.right - trackRect.left) / trackRect.width));
+}
+
 function useSectionReveal() {
   const ref = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"visible" | "hidden">("visible");
@@ -145,9 +164,69 @@ function H2({ children }: { children: React.ReactNode }) {
 function Header() {
   const [open, setOpen] = useState(false);
   const [activeId, setActiveId] = useState<SectionId>("inicio");
+  const [progress, setProgress] = useState<number>(sectionProgress.inicio);
+  const activeIdRef = useRef<SectionId>(activeId);
+  activeIdRef.current = activeId;
+
   const headerRef = useRef<HTMLElement>(null);
+  const progressTrackRef = useRef<HTMLDivElement>(null);
+  const desktopNavRef = useRef<HTMLElement>(null);
+  const navItemRefs = useRef<Partial<Record<SectionId, HTMLAnchorElement | null>>>({});
   const menuBtnRef = useRef<HTMLButtonElement>(null);
-  const progress = sectionProgress[activeId];
+
+  useEffect(() => {
+    const next = computeSectionProgressRatio(
+      activeId,
+      desktopNavRef.current,
+      navItemRefs.current[activeId],
+      progressTrackRef.current,
+    );
+    setProgress((prev) => (Math.abs(prev - next) < 0.0005 ? prev : next));
+  }, [activeId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let cancelled = false;
+    let rafId = 0;
+
+    const updateMeasure = () => {
+      rafId = 0;
+      if (cancelled) return;
+      const id = activeIdRef.current;
+      const next = computeSectionProgressRatio(
+        id,
+        desktopNavRef.current,
+        navItemRefs.current[id],
+        progressTrackRef.current,
+      );
+      setProgress((prev) => (Math.abs(prev - next) < 0.0005 ? prev : next));
+    };
+
+    const scheduleMeasure = () => {
+      if (!rafId) rafId = window.requestAnimationFrame(updateMeasure);
+    };
+
+    window.addEventListener("resize", scheduleMeasure, { passive: true });
+
+    let resizeObserver: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(scheduleMeasure);
+      if (headerRef.current) resizeObserver.observe(headerRef.current);
+      if (desktopNavRef.current) resizeObserver.observe(desktopNavRef.current);
+      if (progressTrackRef.current) resizeObserver.observe(progressTrackRef.current);
+    }
+
+    document.fonts?.ready.then(() => {
+      if (!cancelled) scheduleMeasure();
+    });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("resize", scheduleMeasure);
+      if (rafId) window.cancelAnimationFrame(rafId);
+      resizeObserver?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -216,7 +295,11 @@ function Header() {
 
   return (
     <>
-      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px]">
+      <div
+        ref={progressTrackRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px]"
+      >
         <div
           data-testid="scroll-progress"
           data-section={activeId}
@@ -229,15 +312,26 @@ function Header() {
         className="fixed inset-x-0 top-0 z-50 border-b border-ed-line bg-ed-bg/85 backdrop-blur"
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <a href="#inicio" aria-label="Início" className="rounded-sm transition hover:opacity-90">
+          <a
+            ref={(el) => {
+              navItemRefs.current.inicio = el;
+            }}
+            href="#inicio"
+            aria-label="Início"
+            className="rounded-sm transition hover:opacity-90"
+          >
             <Brand />
           </a>
-          <nav aria-label="Navegação principal" className="hidden gap-8 md:flex">
+          <nav ref={desktopNavRef} aria-label="Navegação principal" className="hidden gap-8 md:flex">
             {nav.map((n) => {
-              const isActive = activeId === n.href.slice(1);
+              const sectionId = n.href.slice(1) as SectionId;
+              const isActive = activeId === sectionId;
               return (
                 <a
                   key={n.href}
+                  ref={(el) => {
+                    navItemRefs.current[sectionId] = el;
+                  }}
                   href={n.href}
                   aria-current={isActive ? "location" : undefined}
                   className={`relative py-1 text-sm transition-colors duration-200 ease-out ${isActive ? "text-ed-fg" : "text-ed-muted hover:text-ed-fg"}`}

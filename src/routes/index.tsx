@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, Download, Github, Linkedin, Menu, X } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { openEmail, openWhatsApp, downloadResume, copyEmail, SOCIAL_LINKS } from "@/utils/contact";
@@ -115,11 +115,10 @@ function H2({ children }: { children: React.ReactNode }) {
 
 function Header() {
   const [open, setOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [progress, setProgress] = useState(0);
   const [activeId, setActiveId] = useState<string>("inicio");
+  const headerRef = useRef<HTMLElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
-  const lastScrollY = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -130,15 +129,6 @@ function Header() {
       const y = window.scrollY;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       setProgress(maxScroll > 0 ? Math.min(1, Math.max(0, y / maxScroll)) : 0);
-
-      if (y < 72) {
-        setHidden(false);
-      } else if (y - lastScrollY.current > 8) {
-        setHidden(true);
-      } else if (lastScrollY.current - y > 6) {
-        setHidden(false);
-      }
-      lastScrollY.current = y;
 
       if (y < 80) {
         setActiveId("inicio");
@@ -151,7 +141,6 @@ function Header() {
       if (!rafId) rafId = window.requestAnimationFrame(updateOnScroll);
     };
 
-    lastScrollY.current = window.scrollY;
     updateOnScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
@@ -190,8 +179,17 @@ function Header() {
         menuBtnRef.current?.focus();
       }
     };
+    const onPointerDown = (e: PointerEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
   }, [open]);
 
   return (
@@ -204,7 +202,8 @@ function Header() {
         />
       </div>
       <header
-        className={`fixed inset-x-0 top-0 z-50 border-b border-ed-line bg-ed-bg/85 backdrop-blur transition-transform duration-200 ease-out focus-within:translate-y-0 ${hidden && !open ? "-translate-y-full" : "translate-y-0"}`}
+        ref={headerRef}
+        className="fixed inset-x-0 top-0 z-50 border-b border-ed-line bg-ed-bg/85 backdrop-blur"
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
           <a href="#inicio" aria-label="Início" className="rounded-sm transition hover:opacity-90">
@@ -520,7 +519,7 @@ function Projects() {
         rel="noopener noreferrer"
         className="mt-8 inline-flex items-center gap-2 text-sm text-ed-muted transition hover:text-ed-fg"
       >
-        Ver todos os projetos no GitHub <ArrowRight className="h-4 w-4" />
+        Ver mais projetos <ArrowRight className="h-4 w-4" />
       </a>
     </Section>
   );
@@ -606,6 +605,7 @@ function Education() {
   const rows = [
     ["Conselho Regional dos Técnicos Industriais de São Paulo (CRT-SP / CFT)", "Técnico em Eletrônica — registro profissional", "Ativo"],
     ["Centro Universitário ENIAC", "Bacharelado em Engenharia Elétrica", "Em andamento"],
+    ["Formação Técnica em Eletrônica", "Curso Técnico em Eletrônica", "Concluído"],
   ];
   return (
     <Section alt>
@@ -613,10 +613,10 @@ function Education() {
       <H2>Formação e credenciais</H2>
       <div className="mt-10 border-t border-ed-line">
         {rows.map(([a, b, c]) => (
-          <div key={a} className="grid gap-2 border-b border-ed-line py-6 sm:grid-cols-[1fr_1fr_auto] sm:gap-8">
+          <div key={a} className="grid gap-1.5 border-b border-ed-line py-6 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_8.5rem] sm:items-start sm:gap-8">
             <p className="font-medium text-ed-fg">{a}</p>
             <p className="text-ed-muted">{b}</p>
-            <p className="font-mono text-xs text-ed-accent sm:pt-1">{c}</p>
+            <p className="font-mono text-xs text-ed-accent sm:pt-1 sm:text-right sm:whitespace-nowrap">{c}</p>
           </div>
         ))}
       </div>
@@ -652,6 +652,34 @@ function Contact() {
           className="rounded-lg border border-ed-line-strong px-6 py-3.5 font-medium text-ed-fg transition duration-200 hover:border-ed-muted active:scale-[0.98]"
         >
           Enviar e-mail
+        </button>
+      </div>
+      <div className="mt-6 flex max-w-md flex-wrap items-center gap-x-6 gap-y-3 border-t border-ed-line pt-6 text-sm text-ed-muted">
+        <a
+          href={SOCIAL_LINKS.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 transition-colors duration-200 hover:text-ed-fg"
+        >
+          <Github className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>GitHub</span>
+        </a>
+        <a
+          href={SOCIAL_LINKS.linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 transition-colors duration-200 hover:text-ed-fg"
+        >
+          <Linkedin className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>LinkedIn</span>
+        </a>
+        <button
+          type="button"
+          onClick={downloadResume}
+          className="inline-flex items-center gap-2 transition-colors duration-200 hover:text-ed-fg active:scale-[0.98]"
+        >
+          <Download className="h-4 w-4 shrink-0 text-ed-accent" aria-hidden="true" />
+          <span>Baixar currículo (PDF)</span>
         </button>
       </div>
     </Section>

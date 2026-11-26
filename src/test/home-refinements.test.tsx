@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
 
@@ -33,7 +33,7 @@ describe("Home refinements", () => {
     expect(screen.queryByText(/Production branch/i)).not.toBeInTheDocument();
   });
 
-  it("renders featured and secondary projects with images, detail links, and working category filters", async () => {
+  it("renders featured and secondary projects with images, detail links, filters, and renamed more-projects link", async () => {
     await renderHome();
 
     const section = document.getElementById("projetos");
@@ -44,6 +44,10 @@ describe("Home refinements", () => {
     expect(withinProjects.getByRole("img", { name: "Placa de aquisição STM32" })).toBeInTheDocument();
     expect(withinProjects.getByRole("img", { name: "Dashboard de telemetria" })).toBeInTheDocument();
     expect(withinProjects.getAllByRole("link", { name: /Ver detalhes/i })).toHaveLength(3);
+
+    const moreLink = withinProjects.getByRole("link", { name: "Ver mais projetos" });
+    expect(moreLink).toHaveAttribute("href", "https://github.com/cfilipe-a");
+    expect(withinProjects.queryByText(/Ver todos os projetos no GitHub/i)).not.toBeInTheDocument();
 
     fireEvent.click(withinProjects.getByRole("button", { name: "Hardware & PCB" }));
     expect(withinProjects.getByRole("heading", { name: "Placa de aquisição STM32" })).toBeInTheDocument();
@@ -73,27 +77,105 @@ describe("Home refinements", () => {
     expect(screen.getByText("Diagnóstico em nível de componente")).toBeInTheDocument();
   });
 
-  it("renders scroll progress bar and manages mobile menu open, Escape, and link close", async () => {
+  it("keeps header fixed during scroll and closes mobile menu on outside click, Escape, and internal link click", async () => {
     await renderHome();
 
     expect(screen.getByTestId("scroll-progress")).toBeInTheDocument();
 
+    const header = document.querySelector("header");
+    expect(header).not.toBeNull();
+    expect(header!.className).toContain("fixed");
+    expect(header!.className).not.toContain("-translate-y-full");
+
+    Object.defineProperty(window, "scrollY", { value: 400, writable: true, configurable: true });
+    fireEvent.scroll(window);
+    expect(header!.className).not.toContain("-translate-y-full");
+
     const menuButton = screen.getByRole("button", { name: "Abrir menu" });
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
 
+    // Open and click inside menu panel (non-link area) -> stays open
     fireEvent.click(menuButton);
     expect(menuButton).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("button", { name: "Fechar menu" })).toBeInTheDocument();
+    const mobileNav = screen.getByRole("navigation", { name: "Navegação mobile" });
+    fireEvent.pointerDown(mobileNav);
+    expect(menuButton).toHaveAttribute("aria-expanded", "true");
 
+    // Click outside header -> closes
+    const main = document.querySelector("main");
+    expect(main).not.toBeNull();
+    fireEvent.pointerDown(main!);
+    expect(menuButton).toHaveAttribute("aria-expanded", "false");
+
+    // Escape -> closes and restores focus
+    fireEvent.click(menuButton);
+    expect(menuButton).toHaveAttribute("aria-expanded", "true");
     fireEvent.keyDown(window, { key: "Escape" });
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
     expect(menuButton).toHaveFocus();
 
+    // Internal link click -> closes
     fireEvent.click(menuButton);
     expect(menuButton).toHaveAttribute("aria-expanded", "true");
-
-    const mobileNav = screen.getByRole("navigation", { name: "Navegação mobile" });
     fireEvent.click(within(mobileNav).getByRole("link", { name: "Projetos" }));
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("renders all education entries in order with consistent column alignment", async () => {
+    await renderHome();
+
+    const heading = screen.getByRole("heading", { name: "Formação e credenciais" });
+    const section = heading.closest("section");
+    expect(section).not.toBeNull();
+    const withinEdu = within(section!);
+
+    const eniac = withinEdu.getByText("Centro Universitário ENIAC");
+    const tecnico = withinEdu.getByText("Formação Técnica em Eletrônica");
+    expect(withinEdu.getByText("Bacharelado em Engenharia Elétrica")).toBeInTheDocument();
+    expect(withinEdu.getByText("Curso Técnico em Eletrônica")).toBeInTheDocument();
+    expect(withinEdu.getByText("Concluído")).toBeInTheDocument();
+
+    // Técnico must appear immediately after ENIAC in DOM order
+    expect(eniac.compareDocumentPosition(tecnico) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // All rows must share the same fixed third-column grid template (no `auto` third track)
+    const rows = section!.querySelectorAll("div.grid");
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
+      expect(row.className).toContain("sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_8.5rem]");
+      expect(row.className).not.toContain("_auto]");
+    }
+  });
+
+  it("renders discreet GitHub, LinkedIn, and PDF resume download links in Contact section", async () => {
+    await renderHome();
+
+    const section = document.getElementById("contato");
+    expect(section).not.toBeNull();
+    const withinContact = within(section!);
+
+    expect(withinContact.getByRole("button", { name: "Falar no WhatsApp" })).toBeInTheDocument();
+    expect(withinContact.getByRole("button", { name: "Enviar e-mail" })).toBeInTheDocument();
+
+    const githubLink = withinContact.getByRole("link", { name: "GitHub" });
+    expect(githubLink).toHaveAttribute("href", "https://github.com/cfilipe-a");
+
+    const linkedinLink = withinContact.getByRole("link", { name: "LinkedIn" });
+    expect(linkedinLink).toHaveAttribute(
+      "href",
+      "https://www.linkedin.com/in/filipe-cavalcante-51338b2aa/",
+    );
+
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    try {
+      const pdfButton = withinContact.getByRole("button", { name: "Baixar currículo (PDF)" });
+      fireEvent.click(pdfButton);
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+      const anchor = clickSpy.mock.instances[0] as HTMLAnchorElement;
+      expect(anchor.getAttribute("href")).toBe("/docs/cv-7f3a9c2e41b8d605.pdf");
+      expect(anchor.download).toBe("Curriculo-Filipe-Cavalcante.pdf");
+    } finally {
+      clickSpy.mockRestore();
+    }
   });
 });

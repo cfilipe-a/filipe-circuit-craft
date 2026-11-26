@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Download, Github, Linkedin, Menu, X } from "lucide-react";
+import { ArrowRight, Download, Github, Linkedin } from "lucide-react";
 import { toast } from "sonner";
+import { Brand, Header } from "@/components/home/Header";
+import { PcbIllustration } from "@/components/home/PcbIllustration";
 import { Toaster } from "@/components/ui/sonner";
-import { openEmail, openWhatsApp, downloadResume, copyEmail, SOCIAL_LINKS } from "@/utils/contact";
-import imgEsp32 from "@/assets/proj-esp32.jpg";
-import imgStm32 from "@/assets/proj-stm32.jpg";
-import imgIot from "@/assets/proj-iot.jpg";
+import {
+  EDUCATION,
+  HOME_PROJECTS,
+  JOBS,
+  METRICS,
+  NAV_ITEMS,
+  PROJECT_FILTERS,
+  SKILLS,
+} from "@/data/home";
+import { copyEmail, downloadResume, openEmail, openWhatsApp, SOCIAL_LINKS } from "@/utils/contact";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,63 +29,6 @@ export const Route = createFileRoute("/")({
   }),
   component: HomePage,
 });
-
-const nav = [
-  { href: "#projetos", label: "Projetos" },
-  { href: "#competencias", label: "Competências" },
-  { href: "#trajetoria", label: "Trajetória" },
-  { href: "#contato", label: "Contato" },
-];
-
-const observedSections = ["inicio", "projetos", "competencias", "trajetoria", "contato"] as const;
-type SectionId = (typeof observedSections)[number];
-
-const sectionProgress: Record<SectionId, number> = {
-  inicio: 0.2,
-  projetos: 0.4,
-  competencias: 0.6,
-  trajetoria: 0.8,
-  contato: 1,
-};
-
-function resolveActiveSection(): SectionId {
-  const y = window.scrollY;
-  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-
-  if (y < 80) return "inicio";
-  if (maxScroll > 0 && y >= maxScroll - 24) return "contato";
-
-  const anchorY = Math.max(120, Math.min(window.innerHeight * 0.35, 260));
-  let current: SectionId = "inicio";
-
-  for (const id of observedSections) {
-    const el = document.getElementById(id);
-    if (el && el.getBoundingClientRect().top <= anchorY) {
-      current = id;
-    }
-  }
-
-  return current;
-}
-
-function computeSectionProgressRatio(
-  targetId: SectionId,
-  desktopNav: HTMLElement | null,
-  targetEl: HTMLAnchorElement | null | undefined,
-  trackEl: HTMLDivElement | null,
-): number {
-  const fallback = sectionProgress[targetId];
-  if (!desktopNav || !targetEl || !trackEl) return fallback;
-
-  const desktopNavRect = desktopNav.getBoundingClientRect();
-  if (desktopNavRect.width <= 0) return fallback;
-
-  const targetRect = targetEl.getBoundingClientRect();
-  const trackRect = trackEl.getBoundingClientRect();
-  if (targetRect.width <= 0 || trackRect.width <= 0) return fallback;
-
-  return Math.min(1, Math.max(0, (targetRect.right - trackRect.left) / trackRect.width));
-}
 
 function useSectionReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -112,14 +63,6 @@ function useSectionReveal() {
   }, []);
 
   return { ref, state };
-}
-
-function Brand({ className = "" }: { className?: string }) {
-  return (
-    <span className={`font-mono text-lg font-bold tracking-tight text-ed-fg ${className}`}>
-      cfilipe<span className="text-ed-accent">.</span>
-    </span>
-  );
 }
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -161,292 +104,6 @@ function H2({ children }: { children: React.ReactNode }) {
   return <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-ed-fg sm:text-4xl">{children}</h2>;
 }
 
-function Header() {
-  const [open, setOpen] = useState(false);
-  const [activeId, setActiveId] = useState<SectionId>("inicio");
-  const [progress, setProgress] = useState<number>(sectionProgress.inicio);
-  const activeIdRef = useRef<SectionId>(activeId);
-  activeIdRef.current = activeId;
-
-  const headerRef = useRef<HTMLElement>(null);
-  const progressTrackRef = useRef<HTMLDivElement>(null);
-  const desktopNavRef = useRef<HTMLElement>(null);
-  const navItemRefs = useRef<Partial<Record<SectionId, HTMLAnchorElement | null>>>({});
-  const menuBtnRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    const next = computeSectionProgressRatio(
-      activeId,
-      desktopNavRef.current,
-      navItemRefs.current[activeId],
-      progressTrackRef.current,
-    );
-    setProgress((prev) => (Math.abs(prev - next) < 0.0005 ? prev : next));
-  }, [activeId]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    let cancelled = false;
-    let rafId = 0;
-
-    const updateMeasure = () => {
-      rafId = 0;
-      if (cancelled) return;
-      const id = activeIdRef.current;
-      const next = computeSectionProgressRatio(
-        id,
-        desktopNavRef.current,
-        navItemRefs.current[id],
-        progressTrackRef.current,
-      );
-      setProgress((prev) => (Math.abs(prev - next) < 0.0005 ? prev : next));
-    };
-
-    const scheduleMeasure = () => {
-      if (!rafId) rafId = window.requestAnimationFrame(updateMeasure);
-    };
-
-    window.addEventListener("resize", scheduleMeasure, { passive: true });
-
-    let resizeObserver: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(scheduleMeasure);
-      if (headerRef.current) resizeObserver.observe(headerRef.current);
-      if (desktopNavRef.current) resizeObserver.observe(desktopNavRef.current);
-      if (progressTrackRef.current) resizeObserver.observe(progressTrackRef.current);
-    }
-
-    document.fonts?.ready.then(() => {
-      if (!cancelled) scheduleMeasure();
-    });
-
-    return () => {
-      cancelled = true;
-      window.removeEventListener("resize", scheduleMeasure);
-      if (rafId) window.cancelAnimationFrame(rafId);
-      resizeObserver?.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    let rafId = 0;
-
-    const syncActiveSection = () => {
-      rafId = 0;
-      setActiveId(resolveActiveSection());
-    };
-
-    const scheduleSync = () => {
-      if (!rafId) rafId = window.requestAnimationFrame(syncActiveSection);
-    };
-
-    syncActiveSection();
-    window.addEventListener("scroll", scheduleSync, { passive: true });
-    window.addEventListener("scrollend", scheduleSync, { passive: true });
-    window.addEventListener("resize", scheduleSync, { passive: true });
-    window.addEventListener("hashchange", scheduleSync);
-
-    let observer: IntersectionObserver | undefined;
-    if (typeof IntersectionObserver !== "undefined") {
-      const elements = observedSections
-        .map((id) => document.getElementById(id))
-        .filter((el): el is HTMLElement => el !== null);
-
-      if (elements.length > 0) {
-        observer = new IntersectionObserver(scheduleSync, {
-          rootMargin: "-25% 0px -55% 0px",
-          threshold: [0, 0.1],
-        });
-        for (const el of elements) observer.observe(el);
-      }
-    }
-
-    return () => {
-      window.removeEventListener("scroll", scheduleSync);
-      window.removeEventListener("scrollend", scheduleSync);
-      window.removeEventListener("resize", scheduleSync);
-      window.removeEventListener("hashchange", scheduleSync);
-      if (rafId) window.cancelAnimationFrame(rafId);
-      observer?.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-        menuBtnRef.current?.focus();
-      }
-    };
-    const onPointerDown = (e: PointerEvent) => {
-      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("pointerdown", onPointerDown);
-    };
-  }, [open]);
-
-  return (
-    <>
-      <div
-        ref={progressTrackRef}
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px]"
-      >
-        <div
-          data-testid="scroll-progress"
-          data-section={activeId}
-          className="h-full origin-left bg-ed-accent/85 transition-transform duration-200 ease-out"
-          style={{ transform: `scaleX(${progress})` }}
-        />
-      </div>
-      <header
-        ref={headerRef}
-        className="fixed inset-x-0 top-0 z-50 border-b border-ed-line bg-ed-bg/85 backdrop-blur"
-      >
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <a
-            ref={(el) => {
-              navItemRefs.current.inicio = el;
-            }}
-            href="#inicio"
-            aria-label="Início"
-            className="rounded-sm transition hover:opacity-90"
-          >
-            <Brand />
-          </a>
-          <nav ref={desktopNavRef} aria-label="Navegação principal" className="hidden gap-8 md:flex">
-            {nav.map((n) => {
-              const sectionId = n.href.slice(1) as SectionId;
-              const isActive = activeId === sectionId;
-              return (
-                <a
-                  key={n.href}
-                  ref={(el) => {
-                    navItemRefs.current[sectionId] = el;
-                  }}
-                  href={n.href}
-                  aria-current={isActive ? "location" : undefined}
-                  className={`relative py-1 text-sm transition-colors duration-200 ease-out ${isActive ? "text-ed-fg" : "text-ed-muted hover:text-ed-fg"}`}
-                >
-                  {n.label}
-                  <span
-                    aria-hidden="true"
-                    className={`absolute inset-x-0 -bottom-0.5 h-[2px] bg-ed-accent transition-opacity duration-200 ease-out ${isActive ? "opacity-100" : "opacity-0"}`}
-                  />
-                </a>
-              );
-            })}
-          </nav>
-          <button
-            ref={menuBtnRef}
-            type="button"
-            className="rounded-md p-1.5 text-ed-fg transition hover:bg-ed-bg2 active:scale-95 md:hidden"
-            aria-label={open ? "Fechar menu" : "Abrir menu"}
-            aria-expanded={open}
-            aria-controls="mobile-nav"
-            onClick={() => setOpen((o) => !o)}
-          >
-            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </div>
-        <div
-          id="mobile-nav"
-          aria-hidden={!open}
-          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out md:hidden ${open ? "grid-rows-[1fr] opacity-100" : "pointer-events-none grid-rows-[0fr] opacity-0"}`}
-        >
-          <nav aria-label="Navegação mobile" className="overflow-hidden border-t border-ed-line bg-ed-bg px-5">
-            <div className="py-3">
-              {nav.map((n) => {
-                const isActive = activeId === n.href.slice(1);
-                return (
-                  <a
-                    key={n.href}
-                    href={n.href}
-                    tabIndex={open ? 0 : -1}
-                    aria-current={isActive ? "location" : undefined}
-                    onClick={() => setOpen(false)}
-                    className={`block border-l-2 py-3 pl-3 text-sm transition-colors duration-200 ease-out ${isActive ? "border-ed-accent text-ed-fg" : "border-transparent text-ed-muted hover:text-ed-fg"}`}
-                  >
-                    {n.label}
-                  </a>
-                );
-              })}
-            </div>
-          </nav>
-        </div>
-      </header>
-    </>
-  );
-}
-
-function PcbIllustration() {
-  const pinsH = [0, 1, 2, 3, 4, 5];
-  const pinsV = [0, 1, 2, 3, 4];
-  return (
-    <svg viewBox="0 0 400 420" className="h-auto w-full max-w-md" role="img" aria-label="Ilustração técnica de placa de circuito">
-      <defs>
-        <pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse">
-          <path d="M20 0H0V20" fill="none" stroke="#27272a" strokeWidth="0.6" />
-        </pattern>
-        <radialGradient id="fade"><stop offset="0.4" stopColor="#fff" /><stop offset="1" stopColor="#000" /></radialGradient>
-        <mask id="m"><rect width="400" height="420" fill="url(#fade)" /></mask>
-      </defs>
-      <rect width="400" height="420" fill="url(#g)" mask="url(#m)" opacity="0.6" />
-      {/* resistor */}
-      <g stroke="#52525b" strokeWidth="2" fill="none">
-        <circle cx="70" cy="70" r="3" fill="#09090b" />
-        <path d="M73 70H120l6-12 10 24 10-24 10 24 6-12h55" />
-        <circle cx="230" cy="70" r="3" fill="#52525b" />
-      </g>
-      {/* board */}
-      <rect x="110" y="120" width="220" height="160" rx="14" fill="#18181b" stroke="#3f3f46" strokeWidth="2" />
-      {[[126, 136], [314, 136], [126, 264], [314, 264]].map(([x, y]) => (
-        <circle key={`${x}-${y}`} cx={x} cy={y} r="5" fill="none" stroke="#71717a" strokeWidth="1.5" />
-      ))}
-      {/* traces */}
-      <g stroke="#3f3f46" strokeWidth="1.2" fill="none">
-        <path d="M130 170H165M130 190H155l12 12M130 215H190" />
-        <path d="M195 130v25M210 130v25" />
-        <path d="M290 195v40M235 245v20h40" />
-      </g>
-      {/* QFP */}
-      {pinsH.map((i) => (
-        <g key={`h${i}`} fill="#52525b">
-          <rect x={185 + i * 9} y="148" width="3" height="8" />
-          <rect x={185 + i * 9} y="232" width="3" height="8" />
-        </g>
-      ))}
-      {pinsV.map((i) => (
-        <g key={`v${i}`} fill="#52525b">
-          <rect x="167" y={168 + i * 11} width="8" height="3" />
-          <rect x="245" y={168 + i * 11} width="8" height="3" />
-        </g>
-      ))}
-      <rect x="176" y="157" width="68" height="74" rx="6" fill="#09090b" stroke="#3f3f46" />
-      <circle cx="185" cy="166" r="2" fill="#52525b" />
-      {/* amber smd */}
-      <path d="M253 177H280" stroke="#a16207" strokeWidth="1.2" />
-      <rect x="280" y="170" width="24" height="12" rx="2" fill="#f59e0b" />
-      {[0, 1, 2, 3, 4].map((i) => <circle key={i} cx={180 + i * 10} cy="258" r="2" fill="#52525b" />)}
-      <circle cx="312" cy="262" r="5" fill="#f59e0b" />
-      {/* capacitor */}
-      <g stroke="#52525b" strokeWidth="2" fill="none">
-        <circle cx="70" cy="340" r="3" fill="#09090b" />
-        <path d="M73 340H143M157 340H230M143 324v32M157 324v32" />
-        <circle cx="230" cy="340" r="3" fill="#52525b" />
-      </g>
-    </svg>
-  );
-}
-
 function Hero() {
   return (
     <section id="inicio" className="relative overflow-hidden scroll-mt-16 bg-ed-bg pt-16">
@@ -476,11 +133,6 @@ function Hero() {
 
 function Metrics() {
   const { ref, state } = useSectionReveal();
-  const items = [
-    ["7+", "Anos de bancada"],
-    ["CRT-SP", "Conselho Regional dos Técnicos Industriais de São Paulo · Ativo"],
-    ["Eng. Elétrica", "Centro Universitário ENIAC (em andamento)"],
-  ];
   return (
     <section className="border-t border-ed-line bg-ed-bg2">
       <div
@@ -488,7 +140,7 @@ function Metrics() {
         data-reveal={state}
         className={`mx-auto grid max-w-6xl divide-y divide-ed-line px-5 transition-[opacity,transform] duration-500 ease-out sm:grid-cols-3 sm:divide-x sm:divide-y-0 ${state === "hidden" ? "translate-y-3 opacity-0" : "translate-y-0 opacity-100"}`}
       >
-        {items.map(([a, b]) => (
+        {METRICS.map(([a, b]) => (
           <div key={a} className="py-10 sm:px-8 sm:first:pl-0">
             <p className="font-display text-3xl font-semibold text-ed-fg">{a}</p>
             <p className="mt-2 text-sm text-ed-muted">{b}</p>
@@ -498,16 +150,6 @@ function Metrics() {
     </section>
   );
 }
-
-type Stage = "Lab / Protótipo" | "Validado em Bancada" | "Em Produção";
-type ProjectItem = { cat: string; t: string; stage: Stage; d: string; tags: string[]; img?: string | undefined };
-
-const projects: ProjectItem[] = [
-  { cat: "Embarcados", t: "Controlador IoT com ESP32", stage: "Validado em Bancada", d: "Placa dedicada com ESP32, medição de corrente e envio MQTT com reconexão automática para monitorar cargas remotamente.", tags: ["ESP32", "C++", "MQTT"], img: imgEsp32 },
-  { cat: "Hardware & PCB", t: "Placa de aquisição STM32", stage: "Lab / Protótipo", d: "Layout 4 camadas com plano de terra dedicado, filtragem e ADC com DMA para leituras em ambiente industrial ruidoso.", tags: ["STM32", "Altium", "4 camadas"], img: imgStm32 },
-  { cat: "Dados", t: "Dashboard de telemetria", stage: "Em Produção", d: "Pipeline de coleta, banco de séries temporais e painéis em Power BI para análise histórica de sensores.", tags: ["Python", "Power BI", "SQL"], img: imgIot },
-];
-const filters = ["Todos", "Hardware & PCB", "Embarcados", "Dados"];
 
 function ProjectMedia({ img, title, cat }: { img?: string | undefined; title: string; cat: string }) {
   if (img) {
@@ -535,7 +177,7 @@ function ProjectMedia({ img, title, cat }: { img?: string | undefined; title: st
 
 function Projects() {
   const [f, setF] = useState("Todos");
-  const list = projects.filter((p) => f === "Todos" || p.cat === f);
+  const list = HOME_PROJECTS.filter((p) => f === "Todos" || p.cat === f);
   const [featured, ...secondary] = list;
 
   return (
@@ -551,7 +193,7 @@ function Projects() {
       <Eyebrow>Projetos</Eyebrow>
       <H2>Projetos em destaque</H2>
       <div className="mt-8 flex flex-wrap gap-2">
-        {filters.map((x) => (
+        {PROJECT_FILTERS.map((x) => (
           <button
             key={x}
             type="button"
@@ -642,17 +284,9 @@ function Projects() {
   );
 }
 
-const skills = [
-  { t: "Hardware & PCB", items: ["Criação de esquemáticos", "Criação de protótipos", "Layout multicamadas", "Análise de defeitos"] },
-  { t: "Firmware & Embarcados", items: ["Microcontroladores", "Microprocessadores", "ESP32 · STM32 · Arduino", "FreeRTOS"] },
-  { t: "Bancada & Instrumentação", items: ["Diagnóstico em nível de componente", "Retrabalho SMD / PTH", "Osciloscópio e analisador lógico", "Calibração"] },
-  { t: "Métodos & Qualidade", items: ["Documentação técnica", "RCA (análise de causa raiz) FMEA", "Normas e segurança"] },
-  { t: "Software & Telemetria", items: ["C/C++ embarcado", "Vibe Coding", "SQL", "Power BI"] },
-];
-
 function Skills() {
   const [i, setI] = useState(0);
-  const cur = skills[i] ?? skills[0]!;
+  const cur = SKILLS[i] ?? SKILLS[0]!;
   return (
     <Section id="competencias" alt>
       <Eyebrow>Competências</Eyebrow>
@@ -662,7 +296,7 @@ function Skills() {
         aria-label="Categorias de competências"
         className="mt-8 flex flex-wrap gap-2 border-b border-ed-line pb-4 lg:flex-nowrap lg:gap-6 lg:pb-0"
       >
-        {skills.map((s, k) => (
+        {SKILLS.map((s, k) => (
           <button
             key={s.t}
             type="button"
@@ -690,19 +324,13 @@ function Skills() {
   );
 }
 
-const jobs = [
-  { r: "Analista Suporte Técnico em Eletrônica", c: "AIWA Brasil", p: "2022 — Atual", i: ["Análise e resolução de defeitos.", "Monitoramento e controle de indicadores com métricas KPI para gestão de qualidade."] },
-  { r: "Técnico de Manutenção Eletrônica", c: "Tv Service", p: "2019 — 2022", i: ["Diagnóstico em nível de componente e leitura de datasheet.", "Retrabalho SMD/PTH."] },
-  { r: "Auxiliar Técnico em Eletrônica", c: "Laboratório de Reparos", p: "2017 — 2019", i: ["Montagem, soldagem e testes de placas PTH.", "Organização de bancada e controle de instrumentos."] },
-];
-
 function Experience() {
   return (
     <Section id="trajetoria">
       <Eyebrow>Trajetória</Eyebrow>
       <H2>Experiência profissional</H2>
       <ol className="mt-12 ml-1 border-l border-ed-line">
-        {jobs.map((j) => (
+        {JOBS.map((j) => (
           <li key={j.r} className="relative pb-12 pl-8 last:pb-0">
             <span className="absolute -left-[4px] top-2 h-[7px] w-[7px] bg-ed-accent" />
             <p className="font-mono text-xs text-ed-muted">{j.p}</p>
@@ -719,17 +347,12 @@ function Experience() {
 }
 
 function Education() {
-  const rows = [
-    ["Conselho Regional dos Técnicos Industriais de São Paulo (CRT-SP / CFT)", "Técnico em Eletrônica — registro profissional", "Ativo"],
-    ["Centro Universitário ENIAC", "Bacharelado em Engenharia Elétrica", "Em andamento"],
-    ["Formação Técnica em Eletrônica", "Curso Técnico em Eletrônica", "Concluído"],
-  ];
   return (
     <Section alt>
       <Eyebrow>Formação</Eyebrow>
       <H2>Formação e credenciais</H2>
       <div className="mt-10 border-t border-ed-line">
-        {rows.map(([a, b, c]) => (
+        {EDUCATION.map(([a, b, c]) => (
           <div key={a} className="grid gap-1.5 border-b border-ed-line py-6 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_8.5rem] sm:items-start sm:gap-8">
             <p className="font-medium text-ed-fg">{a}</p>
             <p className="text-ed-muted">{b}</p>
@@ -821,7 +444,7 @@ function Footer() {
         <div className="mt-10 grid gap-10 sm:grid-cols-3">
           <FootCol title="Navegação">
             <li><a href="#inicio" className={linkCls}>Início</a></li>
-            {nav.map((n) => <li key={n.href}><a href={n.href} className={linkCls}>{n.label}</a></li>)}
+            {NAV_ITEMS.map((n) => <li key={n.href}><a href={n.href} className={linkCls}>{n.label}</a></li>)}
           </FootCol>
           <FootCol title="Links & Currículo">
             <li><button type="button" onClick={downloadResume} className={linkCls}>Baixar currículo (PDF)</button></li>

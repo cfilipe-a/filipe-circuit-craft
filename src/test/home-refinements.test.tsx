@@ -103,27 +103,23 @@ describe("Home refinements", () => {
     const menuButton = screen.getByRole("button", { name: "Abrir menu" });
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
 
-    // Open and click inside menu panel (non-link area) -> stays open
     fireEvent.click(menuButton);
     expect(menuButton).toHaveAttribute("aria-expanded", "true");
     const mobileNav = screen.getByRole("navigation", { name: "Navegação mobile" });
     fireEvent.pointerDown(mobileNav);
     expect(menuButton).toHaveAttribute("aria-expanded", "true");
 
-    // Click outside header -> closes
     const main = document.querySelector("main");
     expect(main).not.toBeNull();
     fireEvent.pointerDown(main!);
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
 
-    // Escape -> closes and restores focus
     fireEvent.click(menuButton);
     expect(menuButton).toHaveAttribute("aria-expanded", "true");
     fireEvent.keyDown(window, { key: "Escape" });
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
     expect(menuButton).toHaveFocus();
 
-    // Internal link click -> closes
     fireEvent.click(menuButton);
     expect(menuButton).toHaveAttribute("aria-expanded", "true");
     fireEvent.click(within(mobileNav).getByRole("link", { name: "Projetos" }));
@@ -144,10 +140,8 @@ describe("Home refinements", () => {
     expect(withinEdu.getByText("Curso Técnico em Eletrônica")).toBeInTheDocument();
     expect(withinEdu.getByText("Concluído")).toBeInTheDocument();
 
-    // Técnico must appear immediately after ENIAC in DOM order
     expect(eniac.compareDocumentPosition(tecnico) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-    // All rows must share the same fixed third-column grid template (no `auto` third track)
     const rows = section!.querySelectorAll("div.grid");
     expect(rows).toHaveLength(3);
     for (const row of rows) {
@@ -253,14 +247,12 @@ describe("Home refinements", () => {
     };
 
     try {
-      // Still within Hero (< 80px)
       scrollToY(40);
       await waitFor(() => {
         expect(bar).toHaveAttribute("data-section", "inicio");
         expect(bar).toHaveStyle({ transform: "scaleX(0.2)" });
       });
 
-      // Reaches Projetos
       scrollToY(650);
       await waitFor(() => {
         expect(bar).toHaveAttribute("data-section", "projetos");
@@ -274,8 +266,6 @@ describe("Home refinements", () => {
         ).toHaveAttribute("aria-current", "location");
       });
 
-      // Two sections simultaneously visible (Competências entering lower viewport at top=500 > anchorY):
-      // stays stably on Projetos with no premature flip or oscillation
       scrollToY(1100);
       await waitFor(() => {
         expect(bar).toHaveAttribute("data-section", "projetos");
@@ -286,7 +276,6 @@ describe("Home refinements", () => {
         );
       });
 
-      // Reaches Competências
       scrollToY(1450);
       await waitFor(() => {
         expect(bar).toHaveAttribute("data-section", "competencias");
@@ -297,7 +286,6 @@ describe("Home refinements", () => {
         );
       });
 
-      // Reaches Trajetória
       scrollToY(2250);
       await waitFor(() => {
         expect(bar).toHaveAttribute("data-section", "trajetoria");
@@ -308,7 +296,6 @@ describe("Home refinements", () => {
         );
       });
 
-      // Reaches Contato (bottom)
       scrollToY(3210);
       await waitFor(() => {
         expect(bar).toHaveAttribute("data-section", "contato");
@@ -322,7 +309,6 @@ describe("Home refinements", () => {
         ).toHaveAttribute("aria-current", "location");
       });
 
-      // Fast jump back up via hashchange/scrollend settles directly on Competências -> Hero
       scrollToY(1500, "hashchange");
       await waitFor(() => {
         expect(bar).toHaveAttribute("data-section", "competencias");
@@ -471,7 +457,6 @@ describe("Home refinements", () => {
     };
 
     try {
-      // Trigger resize to compute initial desktop alignment at 1200px
       fireEvent(window, new Event("resize"));
       await waitFor(() =>
         expect(bar).toHaveStyle({ transform: `scaleX(${140 / 1200})` }),
@@ -497,7 +482,6 @@ describe("Home refinements", () => {
         expect(bar).toHaveStyle({ transform: `scaleX(${1160 / 1200})` }),
       );
 
-      // Resize desktop viewport to 1440px while on Contato
       viewportWidth = 1440;
       rightCoords = {
         inicio: 220,
@@ -511,13 +495,11 @@ describe("Home refinements", () => {
         expect(bar).toHaveStyle({ transform: `scaleX(${1360 / 1440})` }),
       );
 
-      // Switch back to Projetos at 1440px
       scrollToY(650);
       await waitFor(() =>
         expect(bar).toHaveStyle({ transform: `scaleX(${1000 / 1440})` }),
       );
 
-      // Switch to mobile (desktop nav hidden, width 0) -> falls back to proportional stage (0.4)
       desktopVisible = false;
       viewportWidth = 390;
       fireEvent(window, new Event("resize"));

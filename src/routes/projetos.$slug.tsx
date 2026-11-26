@@ -155,7 +155,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={async () => {
-        try { await navigator.clipboard.writeText(text); setDone(true); setTimeout(() => setDone(false), 2000); } catch { /* ignore */ }
+        try { await navigator.clipboard.writeText(text); setDone(true); setTimeout(() => setDone(false), 2000); } catch { return; }
       }}
       className="inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition hover:text-primary"
     >
@@ -169,7 +169,6 @@ function ProjectPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Top bar */}
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-primary">
@@ -179,7 +178,6 @@ function ProjectPage() {
         </div>
       </header>
 
-      {/* Hero */}
       <section className="relative overflow-hidden border-b">
         <div className="line-grid absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
         <div className="relative mx-auto max-w-5xl px-5 py-16 md:py-20">
@@ -208,12 +206,10 @@ function ProjectPage() {
       </section>
 
       <main className="mx-auto max-w-5xl space-y-20 px-5 py-16">
-        {/* Cover */}
         <figure className="overflow-hidden rounded-2xl border bg-card">
           <img src={p.cover} alt={p.title} width={1024} height={768} className="aspect-[16/9] w-full object-cover" />
         </figure>
 
-        {/* Overview */}
         <section>
           <SectionLabel n="01">Visão geral</SectionLabel>
           <div className="grid gap-5 md:grid-cols-3">
@@ -231,10 +227,8 @@ function ProjectPage() {
           </div>
         </section>
 
-        {/* Gallery */}
         <Gallery items={p.gallery} />
 
-        {/* Code */}
         {p.code && (
           <section>
             <SectionLabel n="03">Código & firmware</SectionLabel>
@@ -265,7 +259,6 @@ function ProjectPage() {
           </section>
         )}
 
-        {/* Video */}
         {p.youtubeId && (
           <section>
             <SectionLabel n="04">Vídeo demonstrativo</SectionLabel>
@@ -285,7 +278,6 @@ function ProjectPage() {
           </section>
         )}
 
-        {/* Results */}
         <section>
           <SectionLabel n="05">Resultados</SectionLabel>
           <ul className="space-y-3">

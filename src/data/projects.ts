@@ -1,6 +1,3 @@
-// Edite este arquivo para documentar seus projetos.
-// Para criar um novo projeto: copie o objeto de exemplo, troque o "slug" e o conteúdo.
-// A página fica disponível em /projetos/<slug>.
 import imgEsp32 from "@/assets/proj-esp32.jpg";
 import imgBench from "@/assets/proj-bench.jpg";
 import imgStm32 from "@/assets/proj-stm32.jpg";

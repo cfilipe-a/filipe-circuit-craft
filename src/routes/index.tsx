@@ -1,165 +1,179 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { SOCIAL_LINKS, openEmail, openWhatsApp, downloadResume } from "@/utils/contact";
 import { useState } from "react";
-import {
-  ArrowRight, Download, Cpu, CircuitBoard, Activity, BarChart3, Menu, X, Mail, Linkedin,
-  Github, MessageCircle, ShieldCheck, GraduationCap, Wrench, Code2, ClipboardCheck, ExternalLink, Award,
-} from "lucide-react";
-import imgEsp32 from "@/assets/proj-esp32.jpg";
-import imgBench from "@/assets/proj-bench.jpg";
-import imgStm32 from "@/assets/proj-stm32.jpg";
-import imgIot from "@/assets/proj-iot.jpg";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, Menu, X } from "lucide-react";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { openEmail, openWhatsApp, downloadResume, copyEmail, SOCIAL_LINKS } from "@/utils/contact";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Filipe Cavalcante — Técnico em Eletrônica | Graduando em Engenharia Elétrica" },
-      { name: "description", content: "Portfólio de Filipe Cavalcante: projeto de PCB, firmware C/C++, bancada, instrumentação e telemetria. Registro ativo no CRT-SP / CFT." },
-      { property: "og:title", content: "Filipe Cavalcante — Técnico em Eletrônica | Graduando em Engenharia Elétrica" },
-      { property: "og:description", content: "Da bancada ao firmware: eletrônica que resolve problemas reais." },
+      { title: "cfilipe. — Filipe Cavalcante | Hardware & Confiabilidade" },
+      { name: "description", content: "Engenharia eletrônica, sistemas embarcados e análise de confiabilidade do componente ao dado." },
+      { property: "og:title", content: "cfilipe. — Filipe Cavalcante" },
+      { property: "og:description", content: "Engenharia eletrônica, sistemas embarcados e análise de confiabilidade do componente ao dado." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Index,
+  component: HomePage,
 });
 
 const nav = [
-  ["Sobre", "#sobre"], ["Projetos", "#projetos"], ["Competências", "#competencias"],
-  ["Experiência", "#experiencia"], ["Contato", "#contato"],
-] as const;
+  { href: "#projetos", label: "Projetos" },
+  { href: "#competencias", label: "Competências" },
+  { href: "#trajetoria", label: "Trajetória" },
+  { href: "#contato", label: "Contato" },
+];
 
-function Chip({ children, tone = "default" }: { children: React.ReactNode; tone?: "default" | "primary" }) {
+function Brand({ className = "" }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 font-mono text-[11px] ${tone === "primary" ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-secondary text-muted-foreground"}`}>
-      {children}
+    <span className={`font-mono text-lg font-bold tracking-tight text-ed-fg ${className}`}>
+      cfilipe<span className="text-ed-accent">.</span>
     </span>
   );
 }
 
-function SectionHead({ tag, title, desc }: { tag: string; title: React.ReactNode; desc?: string }) {
+function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-12 max-w-2xl">
-      <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-primary">// {tag}</p>
-      <h2 className="text-3xl font-semibold sm:text-4xl">{title}</h2>
-      {desc && <p className="mt-4 text-muted-foreground">{desc}</p>}
+    <div className="flex items-start gap-3">
+      <span className="mt-[0.45rem] h-[2px] w-4 shrink-0 bg-ed-accent" />
+      <span className="font-mono text-xs uppercase tracking-[0.2em] text-ed-muted">{children}</span>
     </div>
   );
 }
 
-/* PCB corner trace decoration */
-function PcbCorner({ className = "" }: { className?: string }) {
+function Section({ id, alt, children }: { id?: string; alt?: boolean; children: React.ReactNode }) {
   return (
-    <svg className={`pointer-events-none absolute text-primary/25 ${className}`} width="160" height="160" viewBox="0 0 160 160" fill="none" aria-hidden>
-      <path d="M0 20H60L80 40H160" stroke="currentColor" />
-      <path d="M0 50H40L60 70V160" stroke="currentColor" />
-      <path d="M20 0V10L30 20" stroke="currentColor" />
-      <circle cx="80" cy="40" r="3" fill="currentColor" />
-      <circle cx="60" cy="70" r="3" fill="currentColor" />
-      <rect x="140" y="36" width="8" height="8" rx="1" stroke="currentColor" />
-    </svg>
+    <section id={id} className={`scroll-mt-16 border-t border-ed-line py-20 sm:py-24 ${alt ? "bg-ed-bg2" : "bg-ed-bg"}`}>
+      <div className="mx-auto max-w-6xl px-5">{children}</div>
+    </section>
   );
 }
 
-function Logo() {
-  return (
-    <a href="#" className="flex items-center gap-2.5" aria-label="Filipe Cavalcante — início">
-      <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-primary/40 bg-card font-display text-sm font-bold text-primary">
-        FC
-        <span className="absolute -right-1 top-1/2 h-px w-2 bg-primary" />
-        <span className="absolute -right-1.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-amber" />
-      </span>
-      <span className="hidden font-display text-sm font-semibold sm:block">Filipe Cavalcante</span>
-    </a>
-  );
+function H2({ children }: { children: React.ReactNode }) {
+  return <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-ed-fg sm:text-4xl">{children}</h2>;
 }
 
 function Header() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-ed-line bg-ed-bg/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <Logo />
-        <nav className="hidden items-center gap-7 md:flex">
-          {nav.map(([l, h]) => (
-            <a key={h} href={h} className="text-sm text-muted-foreground transition-colors hover:text-foreground">{l}</a>
+        <a href="#inicio" aria-label="Início"><Brand /></a>
+        <nav className="hidden gap-8 md:flex">
+          {nav.map((n) => (
+            <a key={n.href} href={n.href} className="text-sm text-ed-muted transition hover:text-ed-fg">{n.label}</a>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
-          <button className="hidden items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:brightness-110 sm:inline-flex">
-            <Download className="h-4 w-4" /> Currículo (PDF)
-          </button>
-          <button className="grid h-9 w-9 place-items-center rounded-lg border md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
-            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
-        </div>
+        <button className="text-ed-fg md:hidden" aria-label="Abrir menu" onClick={() => setOpen((o) => !o)}>
+          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
       </div>
       {open && (
-        <nav className="border-t bg-background px-5 py-4 md:hidden">
-          {nav.map(([l, h]) => (
-            <a key={h} href={h} onClick={() => setOpen(false)} className="block py-2 text-muted-foreground">{l}</a>
+        <nav className="border-t border-ed-line bg-ed-bg px-5 py-4 md:hidden">
+          {nav.map((n) => (
+            <a key={n.href} href={n.href} onClick={() => setOpen(false)} className="block py-3 text-ed-muted hover:text-ed-fg">{n.label}</a>
           ))}
-          <button className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground">
-            <Download className="h-4 w-4" /> Currículo (PDF)
-          </button>
         </nav>
       )}
     </header>
   );
 }
 
-const focus = [
-  { icon: CircuitBoard, t: "Projeto de PCB", d: "Esquemático, layout e DFM" },
-  { icon: Cpu, t: "Firmware C/C++", d: "ESP32 · STM32 · RTOS" },
-  { icon: Activity, t: "Bancada & Instrumentação", d: "Diagnóstico, medição, reparo" },
-  { icon: BarChart3, t: "Telemetria & Dados", d: "IoT, Python, Power BI" },
-];
+function PcbIllustration() {
+  const pinsH = [0, 1, 2, 3, 4, 5];
+  const pinsV = [0, 1, 2, 3, 4];
+  return (
+    <svg viewBox="0 0 400 420" className="h-auto w-full max-w-md" role="img" aria-label="Ilustração técnica de placa de circuito">
+      <defs>
+        <pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M20 0H0V20" fill="none" stroke="#27272a" strokeWidth="0.6" />
+        </pattern>
+        <radialGradient id="fade"><stop offset="0.4" stopColor="#fff" /><stop offset="1" stopColor="#000" /></radialGradient>
+        <mask id="m"><rect width="400" height="420" fill="url(#fade)" /></mask>
+      </defs>
+      <rect width="400" height="420" fill="url(#g)" mask="url(#m)" opacity="0.6" />
+      {/* resistor */}
+      <g stroke="#52525b" strokeWidth="2" fill="none">
+        <circle cx="70" cy="70" r="3" fill="#09090b" />
+        <path d="M73 70H120l6-12 10 24 10-24 10 24 6-12h55" />
+        <circle cx="230" cy="70" r="3" fill="#52525b" />
+      </g>
+      {/* board */}
+      <rect x="110" y="120" width="220" height="160" rx="14" fill="#18181b" stroke="#3f3f46" strokeWidth="2" />
+      {[[126, 136], [314, 136], [126, 264], [314, 264]].map(([x, y]) => (
+        <circle key={`${x}-${y}`} cx={x} cy={y} r="5" fill="none" stroke="#71717a" strokeWidth="1.5" />
+      ))}
+      {/* traces */}
+      <g stroke="#3f3f46" strokeWidth="1.2" fill="none">
+        <path d="M130 170H165M130 190H155l12 12M130 215H190" />
+        <path d="M195 130v25M210 130v25" />
+        <path d="M290 195v40M235 245v20h40" />
+      </g>
+      {/* QFP */}
+      {pinsH.map((i) => (
+        <g key={`h${i}`} fill="#52525b">
+          <rect x={185 + i * 9} y="148" width="3" height="8" />
+          <rect x={185 + i * 9} y="232" width="3" height="8" />
+        </g>
+      ))}
+      {pinsV.map((i) => (
+        <g key={`v${i}`} fill="#52525b">
+          <rect x="167" y={168 + i * 11} width="8" height="3" />
+          <rect x="245" y={168 + i * 11} width="8" height="3" />
+        </g>
+      ))}
+      <rect x="176" y="157" width="68" height="74" rx="6" fill="#09090b" stroke="#3f3f46" />
+      <circle cx="185" cy="166" r="2" fill="#52525b" />
+      {/* amber smd */}
+      <path d="M253 177H280" stroke="#a16207" strokeWidth="1.2" />
+      <rect x="280" y="170" width="24" height="12" rx="2" fill="#f59e0b" />
+      {[0, 1, 2, 3, 4].map((i) => <circle key={i} cx={180 + i * 10} cy="258" r="2" fill="#52525b" />)}
+      <circle cx="312" cy="262" r="5" fill="#f59e0b" />
+      {/* capacitor */}
+      <g stroke="#52525b" strokeWidth="2" fill="none">
+        <circle cx="70" cy="340" r="3" fill="#09090b" />
+        <path d="M73 340H143M157 340H230M143 324v32M157 324v32" />
+        <circle cx="230" cy="340" r="3" fill="#52525b" />
+      </g>
+    </svg>
+  );
+}
 
 function Hero() {
   return (
-    <section id="sobre" className="relative overflow-hidden pt-36 pb-24 sm:pt-44 sm:pb-32">
-      <div className="line-grid absolute inset-0 [mask-image:radial-gradient(ellipse_70%_65%_at_50%_40%,black_35%,transparent_100%)]" />
-      <div className="relative mx-auto max-w-6xl px-5">
-        <div className="max-w-3xl">
-          <p className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.25em] text-muted-foreground">
-            <span className="h-px w-10 bg-primary" /> Engenharia Aplicada &amp; PD&amp;I
+    <section id="inicio" className="bg-ed-bg pt-16">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-2 md:py-24">
+        <div className="flex justify-center md:order-2"><PcbIllustration /></div>
+        <div className="md:order-1">
+          <Eyebrow>Engenharia Elétrica • Hardware &amp; Confiabilidade</Eyebrow>
+          <h1 className="mt-6 font-display text-5xl font-bold tracking-tight text-ed-fg sm:text-6xl">Filipe Cavalcante</h1>
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-ed-muted">
+            Engenharia eletrônica, sistemas embarcados e análise de confiabilidade do componente ao dado.
           </p>
-          <h1 className="mt-6 text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">Filipe Cavalcante</h1>
-          <p className="mt-5 text-2xl font-medium leading-snug text-primary sm:text-3xl">Engenharia Eletrônica &amp; Desenvolvimento Tecnológico</p>
-          <p className="mt-6 max-w-xl text-lg text-muted-foreground">Da bancada ao firmware: eletrônica que resolve problemas reais.</p>
-          <p className="mt-8 font-mono text-sm text-muted-foreground">Hardware • Firmware • Software</p>
-          <p className="mt-3 font-mono text-sm text-amber">teste anti</p>
-          <div className="mt-10 flex flex-wrap items-center gap-3">
-            <a href="#projetos" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:brightness-110">
-              Ver projetos <ArrowRight className="h-4 w-4" />
-            </a>
-            <button type="button" onClick={downloadResume} className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm font-medium transition hover:border-primary/50">
-              <Download className="h-4 w-4" /> Baixar currículo
-            </button>
-            <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="ml-2 grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Linkedin className="h-5 w-5" /></a>
-            <a href={SOCIAL_LINKS.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Github className="h-5 w-5" /></a>
-          </div>
+          <a href="#contato" className="mt-10 inline-flex w-full items-center justify-center rounded-lg bg-ed-accent px-6 py-3.5 font-semibold text-ed-ink transition hover:bg-ed-accent-hover sm:w-auto">
+            Entrar em contato
+          </a>
         </div>
       </div>
     </section>
   );
 }
 
-function Proofs() {
+function Metrics() {
   const items = [
-    ["7+", "Anos de Bancada"],
-    ["CRT-SP", "Conselho Federal dos Técnicos Industriais\nAtivo"],
-    ["Engenharia Elétrica", "Centro Universitário ENIAC (Em andamento)"],
+    ["7+", "Anos de bancada"],
+    ["CRT-SP", "Conselho Federal dos Técnicos Industriais · Ativo"],
+    ["Eng. Elétrica", "Centro Universitário ENIAC (em andamento)"],
   ];
   return (
-    <section className="border-y bg-card/40">
-      <div className="mx-auto flex max-w-6xl flex-col px-5 sm:flex-row sm:items-start sm:justify-between">
-        {items.map(([a, b], i) => (
-          <div key={b} className={`py-8 text-center ${i === 0 ? "sm:text-left" : i === 2 ? "sm:text-right" : ""}`}>
-            <p className="whitespace-nowrap font-display text-2xl font-semibold text-primary sm:text-3xl">
-              {a === "CRT-SP" ? <abbr title="Conselho Regional dos Técnicos Industriais de São Paulo" className="no-underline">{a}</abbr> : a}
-            </p>
-            <p className="mt-1 font-mono text-xs text-muted-foreground">{b}</p>
+    <section className="border-t border-ed-line bg-ed-bg2">
+      <div className="mx-auto grid max-w-6xl divide-y divide-ed-line px-5 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        {items.map(([a, b]) => (
+          <div key={a} className="py-10 sm:px-8 sm:first:pl-0">
+            <p className="font-display text-3xl font-semibold text-ed-fg">{a}</p>
+            <p className="mt-2 text-sm text-ed-muted">{b}</p>
           </div>
         ))}
       </div>
@@ -167,235 +181,216 @@ function Proofs() {
   );
 }
 
-const projects = [
-  { img: imgEsp32, cat: "Embarcados", t: "Controlador IoT com ESP32", p: "Monitorar cargas remotamente sem acesso físico ao painel.", s: "Placa dedicada com ESP32, medição de corrente e envio MQTT com reconexão automática.", stack: ["ESP32", "C++", "MQTT", "KiCad"] },
-  { img: imgStm32, cat: "PCB", t: "Placa de aquisição STM32", p: "Leituras analógicas ruidosas em ambiente industrial.", s: "Layout 4 camadas com plano de terra dedicado, filtragem e ADC com DMA.", stack: ["STM32", "C", "Altium", "4 camadas"] },
-  { img: imgBench, cat: "Instrumentação", t: "Bancada de testes automatizada", p: "Inspeção manual lenta e sujeita a erros na validação de placas.", s: "Rotina de teste com instrumentos controlados, registro de medidas e relatório.", stack: ["Python", "SCPI", "Osciloscópio"] },
-  { img: imgIot, cat: "Telemetria", t: "Dashboard de telemetria", p: "Dados de sensores dispersos e sem análise histórica.", s: "Pipeline de coleta, banco de séries temporais e painéis em Power BI.", stack: ["Python", "Power BI", "SQL"] },
+type Stage = "Lab / Protótipo" | "Validado em Bancada" | "Em Produção";
+const projects: { cat: string; t: string; stage: Stage; d: string; tags: string[] }[] = [
+  { cat: "Embarcados", t: "Controlador IoT com ESP32", stage: "Validado em Bancada", d: "Placa dedicada com ESP32, medição de corrente e envio MQTT com reconexão automática para monitorar cargas remotamente.", tags: ["ESP32", "C++", "MQTT"] },
+  { cat: "Hardware & PCB", t: "Placa de aquisição STM32", stage: "Lab / Protótipo", d: "Layout 4 camadas com plano de terra dedicado, filtragem e ADC com DMA para leituras em ambiente industrial ruidoso.", tags: ["STM32", "Altium", "4 camadas"] },
+  { cat: "Dados", t: "Dashboard de telemetria", stage: "Em Produção", d: "Pipeline de coleta, banco de séries temporais e painéis em Power BI para análise histórica de sensores.", tags: ["Python", "Power BI", "SQL"] },
 ];
+const filters = ["Todos", "Hardware & PCB", "Embarcados", "Dados"];
 
 function Projects() {
+  const [f, setF] = useState("Todos");
+  const list = projects.filter((p) => f === "Todos" || p.cat === f);
   return (
-    <section id="projetos" className="relative py-24">
-      <div className="mx-auto max-w-6xl px-5">
-        <SectionHead tag="projetos" title={<>Projetos em <span className="text-gradient">destaque</span></>} desc="Problemas, soluções e ideias de cada projeto!" />
-        <div className="grid gap-6 md:grid-cols-2">
-          {projects.map((p) => (
-            <article key={p.t} className="card-hover group overflow-hidden rounded-2xl border bg-card">
-              <div className="relative aspect-[16/10] overflow-hidden">
-                <img src={p.img} alt={p.t} width={1024} height={768} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-                <span className="absolute left-4 top-4 rounded-full border border-primary/30 bg-background/80 px-3 py-1 font-mono text-[11px] text-primary backdrop-blur">{p.cat}</span>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold">{p.t}</h3>
-                <dl className="mt-3 space-y-2 text-sm">
-                  <div><dt className="inline font-mono text-xs text-amber">Problema: </dt><dd className="inline text-muted-foreground">{p.p}</dd></div>
-                  <div><dt className="inline font-mono text-xs text-primary">Solução: </dt><dd className="inline text-muted-foreground">{p.s}</dd></div>
-                </dl>
-                <div className="mt-4 flex flex-wrap gap-2">{p.stack.map((s) => <Chip key={s}>{s}</Chip>)}</div>
-                <Link to="/projetos/$slug" params={{ slug: "exemplo" }} className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary transition group-hover:gap-3">
-                  Ver detalhes <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </article>
-          ))}
-        </div>
-        <div className="mt-10 text-center">
-          <button className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm transition hover:border-primary/50">
-            <Github className="h-4 w-4" /> Ver mais no GitHub
+    <Section id="projetos">
+      <Eyebrow>Projetos</Eyebrow>
+      <H2>Projetos em destaque</H2>
+      <div className="mt-8 flex gap-2 overflow-x-auto scrollbar-none">
+        {filters.map((x) => (
+          <button key={x} onClick={() => setF(x)} className={`shrink-0 rounded-full border px-4 py-1.5 font-mono text-xs transition ${f === x ? "border-ed-accent text-ed-accent" : "border-ed-line-strong text-ed-muted hover:text-ed-fg"}`}>
+            {x}
           </button>
-        </div>
+        ))}
       </div>
-    </section>
+      <ul className="mt-6 border-t border-ed-line">
+        {list.map((p) => (
+          <li key={p.t} className="group border-b border-ed-line py-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-10">
+              <div className="max-w-2xl">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h3 className="text-xl font-semibold text-ed-fg">{p.t}</h3>
+                  <span className="rounded border border-ed-line-strong px-2 py-0.5 font-mono text-[11px] text-ed-muted">{p.stage}</span>
+                </div>
+                <p className="mt-3 line-clamp-2 text-ed-muted">{p.d}</p>
+                <div className="mt-4 flex flex-wrap gap-4 font-mono text-xs text-ed-muted/80">
+                  {p.tags.map((t) => <span key={t}>#{t}</span>)}
+                </div>
+              </div>
+              <Link to="/projetos/$slug" params={{ slug: "exemplo" }} className="inline-flex shrink-0 items-center gap-2 text-sm font-medium text-ed-accent transition group-hover:gap-3">
+                Ver detalhes <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <a href={SOCIAL_LINKS.github} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 text-sm text-ed-muted hover:text-ed-fg">
+        Ver todos os projetos no GitHub <ArrowRight className="h-4 w-4" />
+      </a>
+    </Section>
   );
 }
 
 const skills = [
-  { icon: CircuitBoard, t: "Hardware & PCB", items: ["Criação de esquemáticos", "Criação de protótipos", "Layout multicamadas ", "Análise de defeitos"] },
-  { icon: Cpu, t: "Firmware & Embarcados", items: ["Microcontroladores", "Microprocessadores", "ESP32 · STM32 · Arduino", "FreeRTOS"] },
-  { icon: Activity, t: "Bancada & Instrumentação", items: ["Diagnóstico em nível de componente", "Retrabalho SMD / PTH", "Osciloscópio e analisador lógico", "Calibração"] },
-  { icon: ClipboardCheck, t: "Métodos & Qualidade", items: ["Documentação técnica", "Documentação técnica", "RCA (análise de causa raiz) FMEA", "Normas e segurança"] },
-  { icon: Code2, t: "Software & Telemetria", items: ["C/C++ embarcado", "Vibe Coding", "SQL", "Power BI"] },
+  { t: "Hardware & PCB", items: ["Criação de esquemáticos", "Criação de protótipos", "Layout multicamadas", "Análise de defeitos"] },
+  { t: "Firmware & Embarcados", items: ["Microcontroladores", "Microprocessadores", "ESP32 · STM32 · Arduino", "FreeRTOS"] },
+  { t: "Bancada & Instrumentação", items: ["Diagnóstico em nível de componente", "Retrabalho SMD / PTH", "Osciloscópio e analisador lógico", "Calibração"] },
+  { t: "Métodos & Qualidade", items: ["Documentação técnica", "RCA (análise de causa raiz) FMEA", "Normas e segurança"] },
+  { t: "Software & Telemetria", items: ["C/C++ embarcado", "Vibe Coding", "SQL", "Power BI"] },
 ];
 
 function Skills() {
+  const [i, setI] = useState(0);
+  const cur = skills[i] ?? skills[0]!;
   return (
-    <section id="competencias" className="relative border-t bg-card/30 py-24">
-      <div className="dot-grid absolute inset-0 opacity-40" />
-      <div className="relative mx-auto max-w-6xl px-5">
-        <SectionHead tag="competências" title="Matriz de competências técnicas" desc="Competência aplicada em projetos reais." />
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {skills.map(({ icon: I, t, items }, i) => (
-            <div key={t} className="card-hover rounded-2xl border bg-card p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary"><I className="h-5 w-5" /></span>
-                <span className="font-mono text-xs text-muted-foreground">0{i + 1}</span>
-              </div>
-              <h3 className="text-lg font-semibold">{t}</h3>
-              <ul className="mt-4 space-y-2">
-                {items.map((s) => (
-                  <li key={s} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-sm bg-primary" />{s}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+    <Section id="competencias" alt>
+      <Eyebrow>Competências</Eyebrow>
+      <H2>Áreas de atuação</H2>
+      <div className="mt-8 flex gap-6 overflow-x-auto border-b border-ed-line scrollbar-none">
+        {skills.map((s, k) => (
+          <button key={s.t} onClick={() => setI(k)} className={`-mb-px shrink-0 border-b-2 pb-3 text-sm transition ${k === i ? "border-ed-accent text-ed-fg" : "border-transparent text-ed-muted hover:text-ed-fg"}`}>
+            {s.t}
+          </button>
+        ))}
       </div>
-    </section>
+      <ul className="mt-8 grid gap-x-12 sm:grid-cols-2">
+        {cur.items.map((x) => (
+          <li key={x} className="flex items-center gap-3 border-b border-ed-line py-4 text-ed-fg">
+            <span className="h-1 w-1 bg-ed-accent" />{x}
+          </li>
+        ))}
+      </ul>
+    </Section>
   );
 }
 
 const jobs = [
-  { r: "Analista Suporte Técnico em Eletrônica", c: "AIWA Brasil", p: "2022 — Atual", i: ["\nAnalise e resolução de defeitos.", "\nMonitoramento e controle de indicadores com métricas KPI para gestão de qualidade"] },
-  { r: "Técnico de Manutenção Eletrônica", c: "Tv Service", p: "2019 — 2022", i: ["\nDiagnóstico em nível de componente e Leitura de Datasheet ", "\nRetrabalho SMD/PTH"] },
-  { r: "Auxiliar Técnico em Eletrônica", c: "Laboratório de Reparos", p: "2017 — 2019", i: ["\nMontagem, soldagem e testes de placas PTH", "Organização de bancada e controle de instrumentos"] },
+  { r: "Analista Suporte Técnico em Eletrônica", c: "AIWA Brasil", p: "2022 — Atual", i: ["Análise e resolução de defeitos.", "Monitoramento e controle de indicadores com métricas KPI para gestão de qualidade."] },
+  { r: "Técnico de Manutenção Eletrônica", c: "Tv Service", p: "2019 — 2022", i: ["Diagnóstico em nível de componente e leitura de datasheet.", "Retrabalho SMD/PTH."] },
+  { r: "Auxiliar Técnico em Eletrônica", c: "Laboratório de Reparos", p: "2017 — 2019", i: ["Montagem, soldagem e testes de placas PTH.", "Organização de bancada e controle de instrumentos."] },
 ];
 
 function Experience() {
   return (
-    <section id="experiencia" className="py-24">
-      <div className="mx-auto max-w-6xl px-5">
-        <SectionHead tag="trajetória" title="Experiência profissional" />
-        <ol className="relative ml-3 border-l">
-          {jobs.map((j) => (
-            <li key={j.r} className="relative mb-10 pl-8 last:mb-0">
-              <span className="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full border-2 border-primary bg-background" />
-              <div className="card-hover rounded-2xl border bg-card p-6">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <h3 className="text-lg font-semibold">{j.r}</h3>
-                  <span className="font-mono text-xs text-primary">{j.p}</span>
-                </div>
-                <p className="text-sm text-muted-foreground">{j.c}</p>
-                <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
-                  {j.i.map((x) => <li key={x} className="flex gap-2"><span className="text-amber">›</span>{x}</li>)}
-                </ul>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
+    <Section id="trajetoria">
+      <Eyebrow>Trajetória</Eyebrow>
+      <H2>Experiência profissional</H2>
+      <ol className="mt-12 ml-1 border-l border-ed-line">
+        {jobs.map((j) => (
+          <li key={j.r} className="relative pb-12 pl-8 last:pb-0">
+            <span className="absolute -left-[4px] top-2 h-[7px] w-[7px] bg-ed-accent" />
+            <p className="font-mono text-xs text-ed-muted">{j.p}</p>
+            <h3 className="mt-2 text-lg font-semibold text-ed-fg">{j.r}</h3>
+            <p className="text-sm text-ed-muted">{j.c}</p>
+            <ul className="mt-3 space-y-1.5 text-sm text-ed-muted">
+              {j.i.map((x) => <li key={x}>— {x}</li>)}
+            </ul>
+          </li>
+        ))}
+      </ol>
+    </Section>
   );
 }
 
 function Education() {
+  const rows = [
+    ["Conselho Regional dos Técnicos Industriais de São Paulo (CRT-SP / CFT)", "Técnico em Eletrônica — registro profissional", "Ativo"],
+    ["Centro Universitário ENIAC", "Bacharelado em Engenharia Elétrica", "Em andamento"],
+  ];
   return (
-    <section className="border-t bg-card/30 py-24">
-      <div className="mx-auto max-w-6xl px-5">
-        <SectionHead tag="formação" title="Formação e credenciais" />
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="card-hover relative overflow-hidden rounded-2xl border bg-card p-7">
-            <PcbCorner className="-right-10 -top-10 opacity-60" />
-            <Award className="h-7 w-7 text-primary" />
-            <h3 className="mt-4 text-xl font-semibold">Técnico em Eletrônica</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Formação técnica concluída, com registro profissional ativo.</p>
-            <div className="mt-5 flex items-start gap-3 rounded-xl border border-amber/30 bg-amber/5 p-4">
-              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber" />
-              <p className="text-sm">
-                Registro ativo no <strong>Conselho Regional dos Técnicos Industriais de São Paulo (CRT-SP / CFT)</strong>
-              </p>
-            </div>
+    <Section alt>
+      <Eyebrow>Formação</Eyebrow>
+      <H2>Formação e credenciais</H2>
+      <div className="mt-10 border-t border-ed-line">
+        {rows.map(([a, b, c]) => (
+          <div key={a} className="grid gap-2 border-b border-ed-line py-6 sm:grid-cols-[1fr_1fr_auto] sm:gap-8">
+            <p className="font-medium text-ed-fg">{a}</p>
+            <p className="text-ed-muted">{b}</p>
+            <p className="font-mono text-xs text-ed-accent sm:pt-1">{c}</p>
           </div>
-          <div className="card-hover relative overflow-hidden rounded-2xl border bg-card p-7">
-            <PcbCorner className="-right-10 -top-10 opacity-60" />
-            <GraduationCap className="h-7 w-7 text-primary" />
-            <h3 className="mt-4 text-xl font-semibold">Bacharelado em Engenharia Elétrica</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Centro Universitário ENIAC (graduação em andamento)</p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Chip tone="primary">Em andamento</Chip>
-              <Chip>Circuitos</Chip><Chip>Sistemas de Potência</Chip><Chip>Controle</Chip>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-const tools = ["KiCad", "Altium Designer", "VS Code", "PlatformIO", "Git", "STM32CubeIDE", "Arduino IDE", "Osciloscópio", "", "Multímetro", "Fonte Banc", "Estação de Retrabalho", "Python", "Power BI"];
-
-function Tools() {
-  return (
-    <section className="overflow-hidden border-y py-10" aria-label="Ferramentas e equipamentos">
-      <p className="mb-6 text-center font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Ferramentas & Equipamentos</p>
-      <div className="flex w-max animate-marquee gap-3">
-        {[...tools, ...tools].map((t, i) => (
-          <span key={i} className="inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2 font-mono text-sm text-muted-foreground">
-            <Wrench className="h-3.5 w-3.5 text-primary" />{t}
-          </span>
         ))}
       </div>
-    </section>
+    </Section>
   );
 }
 
-const contacts: { icon: typeof Mail; t: string; d: string; href?: string; onClick?: () => void }[] = [
-  { icon: Mail, t: "E-mail", d: "Clique para enviar um e-mail", onClick: openEmail },
-  { icon: Linkedin, t: "LinkedIn", d: "Conectar no LinkedIn", href: SOCIAL_LINKS.linkedin },
-  { icon: Github, t: "GitHub", d: "Acessar repositórios", href: SOCIAL_LINKS.github },
-  { icon: MessageCircle, t: "WhatsApp", d: "Iniciar conversa no WhatsApp", onClick: openWhatsApp },
-];
+async function handleEmail() {
+  const ok = await copyEmail();
+  if (ok) toast("E-mail copiado! Abrindo seu aplicativo de e-mail...");
+  openEmail();
+}
 
 function Contact() {
   return (
-    <section id="contato" className="relative py-24">
-      <div className="dot-grid absolute inset-0 [mask-image:radial-gradient(ellipse_at_bottom,black_20%,transparent_70%)]" />
-      <div className="relative mx-auto max-w-6xl px-5">
-        <SectionHead tag="contato" title={<>Vamos conversar sobre seu <span className="text-gradient">próximo projeto</span></>} desc="Busco oportunidades em P&D, hardware e sistemas embarcados." />
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {contacts.map(({ icon: I, t, d, href, onClick }) => {
-            const cls = "card-hover group block w-full cursor-pointer rounded-2xl border bg-card p-6 text-left";
-            const inner = (<>
-              <div className="flex items-center justify-between">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary"><I className="h-5 w-5" /></span>
-                <ExternalLink className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
-              </div>
-              <p className="mt-5 font-semibold">{t}</p>
-              <p className="mt-1 truncate font-mono text-xs text-muted-foreground">{d}</p>
-            </>);
-            return href ? (
-              <a key={t} href={href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
-            ) : (
-              <button key={t} type="button" onClick={onClick} className={cls}>{inner}</button>
-            );
-          })}
-        </div>
+    <Section id="contato">
+      <Eyebrow>Contato</Eyebrow>
+      <H2>Vamos conversar sobre um projeto ou oportunidade?</H2>
+      <p className="mt-4 max-w-xl text-ed-muted">
+        Respondo rápido pelo WhatsApp ou e-mail. Conte um pouco sobre o desafio e seguimos a partir daí.
+      </p>
+      <div className="mt-10 flex max-w-md flex-col gap-3">
+        <button onClick={openWhatsApp} className="rounded-lg bg-ed-accent px-6 py-3.5 font-semibold text-ed-ink transition hover:bg-ed-accent-hover">
+          Falar no WhatsApp
+        </button>
+        <button onClick={handleEmail} className="rounded-lg border border-ed-line-strong px-6 py-3.5 font-medium text-ed-fg transition hover:border-ed-muted">
+          Enviar e-mail
+        </button>
       </div>
-    </section>
+    </Section>
   );
 }
 
+function FootCol({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <Eyebrow>{title}</Eyebrow>
+      <ul className="mt-5 space-y-3 text-sm">{children}</ul>
+    </div>
+  );
+}
+const linkCls = "text-ed-muted transition hover:text-ed-fg";
+
 function Footer() {
   return (
-    <footer className="border-t py-10">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3"><Logo /></div>
-        <p className="text-xs">
-          Técnico em Eletrônica com registro ativo no Conselho Regional dos Técnicos Industriais de São Paulo (CRT-SP / CFT).
-        </p>
-        <p className="font-mono text-xs">© {new Date().getFullYear()} Filipe Cavalcante</p>
+    <footer className="border-t border-ed-line bg-ed-bg2">
+      <div className="mx-auto max-w-6xl px-5 py-16">
+        <Brand className="text-xl" />
+        <div className="mt-10 grid gap-10 sm:grid-cols-3">
+          <FootCol title="Navegação">
+            <li><a href="#inicio" className={linkCls}>Início</a></li>
+            {nav.map((n) => <li key={n.href}><a href={n.href} className={linkCls}>{n.label}</a></li>)}
+          </FootCol>
+          <FootCol title="Links & Currículo">
+            <li><button onClick={downloadResume} className={linkCls}>Baixar currículo (PDF)</button></li>
+            <li><a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" className={linkCls}>LinkedIn</a></li>
+            <li><a href={SOCIAL_LINKS.github} target="_blank" rel="noopener noreferrer" className={linkCls}>GitHub</a></li>
+          </FootCol>
+          <FootCol title="Contato">
+            <li><button onClick={openWhatsApp} className={linkCls}>WhatsApp</button></li>
+            <li><button onClick={handleEmail} className={linkCls}>E-mail</button></li>
+          </FootCol>
+        </div>
+        <p className="mt-14 border-t border-ed-line pt-6 text-xs text-ed-muted">© 2026 Filipe Cavalcante. Todos os direitos reservados.</p>
       </div>
     </footer>
   );
 }
 
-function Index() {
+function HomePage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen scroll-smooth bg-ed-bg font-sans text-ed-fg">
       <Header />
       <main>
         <Hero />
-        <Proofs />
+        <Metrics />
         <Projects />
         <Skills />
         <Experience />
         <Education />
-        <Tools />
         <Contact />
       </main>
       <Footer />
+      <Toaster />
     </div>
   );
 }

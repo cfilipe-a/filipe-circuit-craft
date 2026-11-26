@@ -14,4 +14,20 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
+
+  it("matches /projetos/$slug for project detail pages", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/projetos/exemplo");
+
+    expect(matches.at(-1)?.routeId).toBe("/projetos/$slug");
+  });
+
+  it("does not match the removed /v2 route", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/v2");
+
+    expect(matches.at(-1)?.routeId).toBe(rootRouteId);
+  });
 });

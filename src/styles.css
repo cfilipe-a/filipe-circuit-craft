@@ -38,27 +38,27 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #0a0b0e;
-  --foreground: #f3efe6;
-  --card: #121318;
-  --card-foreground: #f3efe6;
-  --popover: #121318;
-  --popover-foreground: #f3efe6;
-  --primary: #f5b041;
-  --primary-foreground: #0a0b0e;
-  --support: #e8892b;
-  --amber: #ffd27a;
-  --secondary: #1a1b21;
-  --secondary-foreground: #f3efe6;
-  --muted: #1a1b21;
-  --muted-foreground: #a39d92;
-  --accent: #1a1b21;
-  --accent-foreground: #f3efe6;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #111114;
+  --card-foreground: #fafafa;
+  --popover: #111114;
+  --popover-foreground: #fafafa;
+  --primary: #f59e0b;
+  --primary-foreground: #09090b;
+  --support: #d97706;
+  --amber: #f59e0b;
+  --secondary: #18181b;
+  --secondary-foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #18181b;
+  --accent-foreground: #fafafa;
   --destructive: #ef4444;
-  --destructive-foreground: #f3efe6;
-  --border: #23242c;
-  --input: #23242c;
-  --ring: #f5b041;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #f59e0b;
 }
 
 @layer base {
@@ -78,23 +78,11 @@
   }
 }
 
-@utility dot-grid {
-  background-image: radial-gradient(color-mix(in oklab, var(--primary) 18%, transparent) 1px, transparent 1px);
-  background-size: 22px 22px;
-}
-
 @utility line-grid {
   background-image:
     linear-gradient(color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px),
     linear-gradient(90deg, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px);
   background-size: 48px 48px;
-}
-
-@utility text-gradient {
-  background: linear-gradient(100deg, var(--primary), var(--support));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 @utility card-hover {
@@ -106,16 +94,13 @@
   }
 }
 
-@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@utility animate-marquee { animation: marquee 40s linear infinite; }
-
 @utility scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;
   &::-webkit-scrollbar { display: none; }
 }
 
-/* Layout v2 (editorial) tokens */
+/* Editorial design tokens */
 @theme {
   --color-ed-bg: #09090b;
   --color-ed-bg2: #111114;

@@ -87,9 +87,18 @@ describe("Home refinements", () => {
     expect(header!.className).toContain("fixed");
     expect(header!.className).not.toContain("-translate-y-full");
 
-    Object.defineProperty(window, "scrollY", { value: 400, writable: true, configurable: true });
-    fireEvent.scroll(window);
-    expect(header!.className).not.toContain("-translate-y-full");
+    const originalScrollYDesc = Object.getOwnPropertyDescriptor(window, "scrollY");
+    try {
+      Object.defineProperty(window, "scrollY", { value: 400, writable: true, configurable: true });
+      fireEvent.scroll(window);
+      expect(header!.className).not.toContain("-translate-y-full");
+    } finally {
+      if (originalScrollYDesc) {
+        Object.defineProperty(window, "scrollY", originalScrollYDesc);
+      } else {
+        Object.defineProperty(window, "scrollY", { value: 0, writable: true, configurable: true });
+      }
+    }
 
     const menuButton = screen.getByRole("button", { name: "Abrir menu" });
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
@@ -176,6 +185,149 @@ describe("Home refinements", () => {
       expect(anchor.download).toBe("Curriculo-Filipe-Cavalcante.pdf");
     } finally {
       clickSpy.mockRestore();
+    }
+  });
+
+  it("advances and retrocedes top progress bar by section stages in sync with active nav links", async () => {
+    const originalScrollHeightDesc = Object.getOwnPropertyDescriptor(
+      document.documentElement,
+      "scrollHeight",
+    );
+    const originalScrollYDesc = Object.getOwnPropertyDescriptor(window, "scrollY");
+
+    Object.defineProperty(window, "scrollY", {
+      value: 0,
+      writable: true,
+      configurable: true,
+    });
+
+    await renderHome();
+
+    const bar = screen.getByTestId("scroll-progress");
+    expect(bar).toHaveStyle({ transform: "scaleX(0.2)" });
+
+    const desktopNav = screen.getByRole("navigation", { name: "Navegação principal" });
+    const mobileNav = screen.getByRole("navigation", { name: "Navegação mobile", hidden: true });
+
+    const sectionTops: Record<string, number> = {
+      inicio: 0,
+      projetos: 800,
+      competencias: 1600,
+      trajetoria: 2400,
+      contato: 3200,
+    };
+
+    const spies = Object.keys(sectionTops).map((id) => {
+      const el = document.getElementById(id)!;
+      return vi.spyOn(el, "getBoundingClientRect").mockImplementation(() => {
+        const top = sectionTops[id]! - window.scrollY;
+        return {
+          top,
+          bottom: top + 500,
+          left: 0,
+          right: 1000,
+          width: 1000,
+          height: 500,
+          x: 0,
+          y: top,
+          toJSON: () => ({}),
+        } as DOMRect;
+      });
+    });
+
+    Object.defineProperty(document.documentElement, "scrollHeight", {
+      value: 4000,
+      writable: true,
+      configurable: true,
+    });
+
+    const scrollToY = (y: number) => {
+      Object.defineProperty(window, "scrollY", {
+        value: y,
+        writable: true,
+        configurable: true,
+      });
+      fireEvent.scroll(window);
+    };
+
+    try {
+      // Still within Hero (< 80px)
+      scrollToY(40);
+      await waitFor(() => expect(bar).toHaveStyle({ transform: "scaleX(0.2)" }));
+
+      // Reaches Projetos
+      scrollToY(650);
+      await waitFor(() => {
+        expect(bar).toHaveStyle({ transform: "scaleX(0.4)" });
+        expect(within(desktopNav).getByRole("link", { name: "Projetos" })).toHaveAttribute(
+          "aria-current",
+          "location",
+        );
+        expect(
+          within(mobileNav).getByRole("link", { name: "Projetos", hidden: true }),
+        ).toHaveAttribute("aria-current", "location");
+      });
+
+      // Small scroll inside Projetos does not alter progress continuously
+      scrollToY(760);
+      await waitFor(() => expect(bar).toHaveStyle({ transform: "scaleX(0.4)" }));
+
+      // Reaches Competências
+      scrollToY(1450);
+      await waitFor(() => {
+        expect(bar).toHaveStyle({ transform: "scaleX(0.6)" });
+        expect(within(desktopNav).getByRole("link", { name: "Competências" })).toHaveAttribute(
+          "aria-current",
+          "location",
+        );
+      });
+
+      // Reaches Trajetória
+      scrollToY(2250);
+      await waitFor(() => {
+        expect(bar).toHaveStyle({ transform: "scaleX(0.8)" });
+        expect(within(desktopNav).getByRole("link", { name: "Trajetória" })).toHaveAttribute(
+          "aria-current",
+          "location",
+        );
+      });
+
+      // Reaches Contato (bottom)
+      scrollToY(3200);
+      await waitFor(() => {
+        expect(bar).toHaveStyle({ transform: "scaleX(1)" });
+        expect(within(desktopNav).getByRole("link", { name: "Contato" })).toHaveAttribute(
+          "aria-current",
+          "location",
+        );
+        expect(
+          within(mobileNav).getByRole("link", { name: "Contato", hidden: true }),
+        ).toHaveAttribute("aria-current", "location");
+      });
+
+      // Scrolls back up to Projetos and Inicio
+      scrollToY(700);
+      await waitFor(() => {
+        expect(bar).toHaveStyle({ transform: "scaleX(0.4)" });
+        expect(within(desktopNav).getByRole("link", { name: "Projetos" })).toHaveAttribute(
+          "aria-current",
+          "location",
+        );
+      });
+
+      scrollToY(0);
+      await waitFor(() => {
+        expect(bar).toHaveStyle({ transform: "scaleX(0.2)" });
+        expect(within(desktopNav).queryByRole("link", { current: "location" })).not.toBeInTheDocument();
+      });
+    } finally {
+      for (const spy of spies) spy.mockRestore();
+      if (originalScrollHeightDesc) {
+        Object.defineProperty(document.documentElement, "scrollHeight", originalScrollHeightDesc);
+      }
+      if (originalScrollYDesc) {
+        Object.defineProperty(window, "scrollY", originalScrollYDesc);
+      }
     }
   });
 });

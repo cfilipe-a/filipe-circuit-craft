@@ -29,7 +29,36 @@ const nav = [
   { href: "#contato", label: "Contato" },
 ];
 
-const observedSections = ["inicio", "projetos", "competencias", "trajetoria", "contato"];
+const observedSections = ["inicio", "projetos", "competencias", "trajetoria", "contato"] as const;
+type SectionId = (typeof observedSections)[number];
+
+const sectionProgress: Record<SectionId, number> = {
+  inicio: 0.2,
+  projetos: 0.4,
+  competencias: 0.6,
+  trajetoria: 0.8,
+  contato: 1,
+};
+
+function resolveActiveSection(): SectionId {
+  const y = window.scrollY;
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+
+  if (y < 80) return "inicio";
+  if (maxScroll > 0 && y >= maxScroll - 40) return "contato";
+
+  const anchorY = Math.max(120, Math.min(window.innerHeight * 0.35, 260));
+  let current: SectionId = "inicio";
+
+  for (const id of observedSections) {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= anchorY) {
+      current = id;
+    }
+  }
+
+  return current;
+}
 
 function useSectionReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -115,60 +144,51 @@ function H2({ children }: { children: React.ReactNode }) {
 
 function Header() {
   const [open, setOpen] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [activeId, setActiveId] = useState<string>("inicio");
+  const [activeId, setActiveId] = useState<SectionId>("inicio");
   const headerRef = useRef<HTMLElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const progress = sectionProgress[activeId];
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     let rafId = 0;
 
-    const updateOnScroll = () => {
+    const syncActiveSection = () => {
       rafId = 0;
-      const y = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(maxScroll > 0 ? Math.min(1, Math.max(0, y / maxScroll)) : 0);
+      setActiveId(resolveActiveSection());
+    };
 
-      if (y < 80) {
-        setActiveId("inicio");
-      } else if (maxScroll > 0 && y >= maxScroll - 40) {
-        setActiveId("contato");
+    const scheduleSync = () => {
+      if (!rafId) rafId = window.requestAnimationFrame(syncActiveSection);
+    };
+
+    syncActiveSection();
+    window.addEventListener("scroll", scheduleSync, { passive: true });
+    window.addEventListener("resize", scheduleSync, { passive: true });
+    window.addEventListener("hashchange", scheduleSync);
+
+    let observer: IntersectionObserver | undefined;
+    if (typeof IntersectionObserver !== "undefined") {
+      const elements = observedSections
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => el !== null);
+
+      if (elements.length > 0) {
+        observer = new IntersectionObserver(scheduleSync, {
+          rootMargin: "-25% 0px -55% 0px",
+          threshold: [0, 0.1],
+        });
+        for (const el of elements) observer.observe(el);
       }
-    };
+    }
 
-    const onScroll = () => {
-      if (!rafId) rafId = window.requestAnimationFrame(updateOnScroll);
-    };
-
-    updateOnScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", scheduleSync);
+      window.removeEventListener("resize", scheduleSync);
+      window.removeEventListener("hashchange", scheduleSync);
       if (rafId) window.cancelAnimationFrame(rafId);
+      observer?.disconnect();
     };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof IntersectionObserver === "undefined") return;
-    const elements = observedSections
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
-    if (elements.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id);
-          }
-        }
-      },
-      { rootMargin: "-30% 0px -55% 0px", threshold: [0, 0.25] },
-    );
-
-    for (const el of elements) observer.observe(el);
-    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -197,7 +217,7 @@ function Header() {
       <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px]">
         <div
           data-testid="scroll-progress"
-          className="h-full origin-left bg-ed-accent/85 transition-transform duration-75 ease-out"
+          className="h-full origin-left bg-ed-accent/85 transition-transform duration-300 ease-out"
           style={{ transform: `scaleX(${progress})` }}
         />
       </div>

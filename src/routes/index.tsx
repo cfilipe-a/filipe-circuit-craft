@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { SOCIAL_LINKS, openEmail, openWhatsApp, downloadResume } from "@/utils/contact";
 import { useState } from "react";
 import {
   ArrowRight, Download, Cpu, CircuitBoard, Activity, BarChart3, Menu, X, Mail, Linkedin,
@@ -126,16 +127,16 @@ function Hero() {
           <h1 className="mt-6 text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">Filipe Cavalcante</h1>
           <p className="mt-5 text-2xl font-medium leading-snug text-primary sm:text-3xl">Engenharia Eletrônica &amp; Desenvolvimento Tecnológico</p>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">Da bancada ao firmware: eletrônica que resolve problemas reais.</p>
-          <p className="mt-8 font-mono text-sm text-muted-foreground">Hardware • Firmware • Software • Sistemas Embarcados</p>
+          <p className="mt-8 font-mono text-sm text-muted-foreground">Hardware • Firmware • Software</p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <a href="#projetos" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:brightness-110">
               Ver projetos <ArrowRight className="h-4 w-4" />
             </a>
-            <button className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm font-medium transition hover:border-primary/50">
+            <button type="button" onClick={downloadResume} className="inline-flex items-center gap-2 rounded-lg border bg-card px-5 py-3 text-sm font-medium transition hover:border-primary/50">
               <Download className="h-4 w-4" /> Baixar currículo
             </button>
-            <button aria-label="LinkedIn" className="ml-2 grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Linkedin className="h-5 w-5" /></button>
-            <button aria-label="GitHub" className="grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Github className="h-5 w-5" /></button>
+            <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="ml-2 grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Linkedin className="h-5 w-5" /></a>
+            <a href={SOCIAL_LINKS.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="grid h-11 w-11 place-items-center text-foreground transition hover:text-primary"><Github className="h-5 w-5" /></a>
           </div>
         </div>
       </div>
@@ -146,7 +147,7 @@ function Hero() {
 function Proofs() {
   const items = [
     ["7+", "Anos de Bancada"],
-    ["CRT-SP", "Conselho Federal dos Técnicos Industriais"],
+    ["CRT-SP", "Conselho Federal dos Técnicos Industriais\nAtivo"],
     ["Engenharia Elétrica", "Centro Universitário ENIAC (Em andamento)"],
   ];
   return (
@@ -176,7 +177,7 @@ function Projects() {
   return (
     <section id="projetos" className="relative py-24">
       <div className="mx-auto max-w-6xl px-5">
-        <SectionHead tag="projetos" title={<>Projetos em <span className="text-gradient">destaque</span></>} desc="Problema, solução e stack de cada projeto — com fotos de bancada e hardware real." />
+        <SectionHead tag="projetos" title={<>Projetos em <span className="text-gradient">destaque</span></>} desc="Problemas, soluções e ideias de cada projeto!" />
         <div className="grid gap-6 md:grid-cols-2">
           {projects.map((p) => (
             <article key={p.t} className="card-hover group overflow-hidden rounded-2xl border bg-card">
@@ -191,9 +192,9 @@ function Projects() {
                   <div><dt className="inline font-mono text-xs text-primary">Solução: </dt><dd className="inline text-muted-foreground">{p.s}</dd></div>
                 </dl>
                 <div className="mt-4 flex flex-wrap gap-2">{p.stack.map((s) => <Chip key={s}>{s}</Chip>)}</div>
-                <button className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary transition group-hover:gap-3">
+                <Link to="/projetos/$slug" params={{ slug: "exemplo" }} className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary transition group-hover:gap-3">
                   Ver detalhes <ArrowRight className="h-4 w-4" />
-                </button>
+                </Link>
               </div>
             </article>
           ))}
@@ -209,11 +210,11 @@ function Projects() {
 }
 
 const skills = [
-  { icon: CircuitBoard, t: "Hardware & PCB", items: ["Captura de esquemáticos", "Layout multicamadas", "DFM / DFT", "Fontes e reguladores"] },
-  { icon: Cpu, t: "Firmware & Embarcados", items: ["Microcontroladores", "ESP32 · STM32 · Arduino", "FreeRTOS", "UART · SPI · I²C · CAN"] },
+  { icon: CircuitBoard, t: "Hardware & PCB", items: ["Criação de esquemáticos", "Criação de protótipos", "Layout multicamadas ", "Análise de defeitos"] },
+  { icon: Cpu, t: "Firmware & Embarcados", items: ["Microcontroladores", "Microprocessadores", "ESP32 · STM32 · Arduino", "FreeRTOS"] },
   { icon: Activity, t: "Bancada & Instrumentação", items: ["Diagnóstico em nível de componente", "Retrabalho SMD / PTH", "Osciloscópio e analisador lógico", "Calibração"] },
-  { icon: ClipboardCheck, t: "Métodos & Qualidade", items: ["RCA (análise de causa raiz)", "FMEA", "Documentação técnica", "Normas e segurança"] },
-  { icon: Code2, t: "Software & Telemetria", items: ["C/C++ embarcado", "MQTT · REST", "SQL", "Power BI"] },
+  { icon: ClipboardCheck, t: "Métodos & Qualidade", items: ["Documentação técnica", "Documentação técnica", "RCA (análise de causa raiz) FMEA", "Normas e segurança"] },
+  { icon: Code2, t: "Software & Telemetria", items: ["C/C++ embarcado", "Vibe Coding", "SQL", "Power BI"] },
 ];
 
 function Skills() {
@@ -221,7 +222,7 @@ function Skills() {
     <section id="competencias" className="relative border-t bg-card/30 py-24">
       <div className="dot-grid absolute inset-0 opacity-40" />
       <div className="relative mx-auto max-w-6xl px-5">
-        <SectionHead tag="competências" title="Matriz de competências técnicas" desc="Organizada por disciplina — cada competência aplicada em projetos reais." />
+        <SectionHead tag="competências" title="Matriz de competências técnicas" desc="Competência aplicada em projetos reais." />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {skills.map(({ icon: I, t, items }, i) => (
             <div key={t} className="card-hover rounded-2xl border bg-card p-6">
@@ -246,9 +247,9 @@ function Skills() {
 }
 
 const jobs = [
-  { r: "Técnico em Eletrônica — P&D", c: "Empresa de Automação Industrial", p: "2022 — Atual", i: ["Desenvolvimento de placas de controle e firmware para ESP32/STM32", "Redução de retrabalho em validação com rotinas de teste em bancada"] },
-  { r: "Técnico de Manutenção Eletrônica", c: "Assistência Técnica Especializada", p: "2019 — 2022", i: ["Diagnóstico em nível de componente e retrabalho SMD", "Aplicação de RCA para falhas recorrentes"] },
-  { r: "Auxiliar Técnico em Eletrônica", c: "Laboratório de Reparos", p: "2017 — 2019", i: ["Montagem, soldagem e testes de placas", "Organização de bancada e controle de instrumentos"] },
+  { r: "Analista Suporte Técnico em Eletrônica", c: "AIWA Brasil", p: "2022 — Atual", i: ["\nAnalise e resolução de defeitos.", "\nMonitoramento e controle de indicadores com métricas KPI para gestão de qualidade"] },
+  { r: "Técnico de Manutenção Eletrônica", c: "Tv Service", p: "2019 — 2022", i: ["\nDiagnóstico em nível de componente e Leitura de Datasheet ", "\nRetrabalho SMD/PTH"] },
+  { r: "Auxiliar Técnico em Eletrônica", c: "Laboratório de Reparos", p: "2017 — 2019", i: ["\nMontagem, soldagem e testes de placas PTH", "Organização de bancada e controle de instrumentos"] },
 ];
 
 function Experience() {
@@ -312,7 +313,7 @@ function Education() {
   );
 }
 
-const tools = ["KiCad", "Altium Designer", "VS Code", "PlatformIO", "Git", "STM32CubeIDE", "Arduino IDE", "Osciloscópio", "Analisador Lógico", "Multímetro", "Fonte Programável", "Estação de Retrabalho", "Python", "Power BI"];
+const tools = ["KiCad", "Altium Designer", "VS Code", "PlatformIO", "Git", "STM32CubeIDE", "Arduino IDE", "Osciloscópio", "", "Multímetro", "Fonte Banc", "Estação de Retrabalho", "Python", "Power BI"];
 
 function Tools() {
   return (
@@ -329,11 +330,11 @@ function Tools() {
   );
 }
 
-const contacts = [
-  { icon: Mail, t: "E-mail", d: "contato@filipecavalcante.com.br" },
-  { icon: Linkedin, t: "LinkedIn", d: "/in/filipecavalcante" },
-  { icon: Github, t: "GitHub", d: "@filipecavalcante" },
-  { icon: MessageCircle, t: "WhatsApp", d: "Enviar mensagem" },
+const contacts: { icon: typeof Mail; t: string; d: string; href?: string; onClick?: () => void }[] = [
+  { icon: Mail, t: "E-mail", d: "Clique para enviar um e-mail", onClick: openEmail },
+  { icon: Linkedin, t: "LinkedIn", d: "Conectar no LinkedIn", href: SOCIAL_LINKS.linkedin },
+  { icon: Github, t: "GitHub", d: "Acessar repositórios", href: SOCIAL_LINKS.github },
+  { icon: MessageCircle, t: "WhatsApp", d: "Iniciar conversa no WhatsApp", onClick: openWhatsApp },
 ];
 
 function Contact() {
@@ -343,16 +344,22 @@ function Contact() {
       <div className="relative mx-auto max-w-6xl px-5">
         <SectionHead tag="contato" title={<>Vamos conversar sobre seu <span className="text-gradient">próximo projeto</span></>} desc="Busco oportunidades em P&D, hardware e sistemas embarcados." />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {contacts.map(({ icon: I, t, d }) => (
-            <button key={t} className="card-hover group rounded-2xl border bg-card p-6 text-left">
+          {contacts.map(({ icon: I, t, d, href, onClick }) => {
+            const cls = "card-hover group block w-full cursor-pointer rounded-2xl border bg-card p-6 text-left";
+            const inner = (<>
               <div className="flex items-center justify-between">
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary"><I className="h-5 w-5" /></span>
                 <ExternalLink className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
               </div>
               <p className="mt-5 font-semibold">{t}</p>
               <p className="mt-1 truncate font-mono text-xs text-muted-foreground">{d}</p>
-            </button>
-          ))}
+            </>);
+            return href ? (
+              <a key={t} href={href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+            ) : (
+              <button key={t} type="button" onClick={onClick} className={cls}>{inner}</button>
+            );
+          })}
         </div>
       </div>
     </section>

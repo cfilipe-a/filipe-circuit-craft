@@ -128,6 +128,7 @@ function Hero() {
           <p className="mt-5 text-2xl font-medium leading-snug text-primary sm:text-3xl">Engenharia Eletrônica &amp; Desenvolvimento Tecnológico</p>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">Da bancada ao firmware: eletrônica que resolve problemas reais.</p>
           <p className="mt-8 font-mono text-sm text-muted-foreground">Hardware • Firmware • Software</p>
+          <p className="mt-3 font-mono text-sm text-amber">teste anti</p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <a href="#projetos" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:brightness-110">
               Ver projetos <ArrowRight className="h-4 w-4" />

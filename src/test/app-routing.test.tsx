@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter, rootRouteId } from "@tanstack/react-router";
 import { describe, expect, it } from "vitest";
 
-import { getProjectDoc, projectDocs } from "@/data/projects";
+import { getProjectBySlug, PROJECTS } from "@/data/projects";
 import { routeTree } from "@/routeTree.gen";
 
 describe("App routing", () => {
@@ -23,11 +23,10 @@ describe("App routing", () => {
   });
 
   it("exposes only the single neutral model project document", () => {
-    expect(projectDocs).toHaveLength(1);
-    const modelDoc = getProjectDoc("modelo");
+    expect(PROJECTS).toHaveLength(1);
+    const modelDoc = getProjectBySlug("modelo");
     expect(modelDoc).toBeDefined();
-    expect(modelDoc?.youtubeId).toBeUndefined();
-    expect(getProjectDoc("exemplo")).toBeUndefined();
+    expect(getProjectBySlug("exemplo")).toBeUndefined();
   });
 
   it("does not match the removed /v2 route", () => {

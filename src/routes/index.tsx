@@ -7,13 +7,13 @@ import { PcbIllustration } from "@/components/home/PcbIllustration";
 import { Toaster } from "@/components/ui/sonner";
 import {
   EDUCATION,
-  HOME_PROJECTS,
   JOBS,
   METRICS,
   NAV_ITEMS,
   PROJECT_FILTERS,
   SKILLS,
 } from "@/data/home";
+import { getVisibleHomeProjects } from "@/data/projects";
 import { copyEmail, downloadResume, openEmail, openWhatsApp, SOCIAL_LINKS } from "@/utils/contact";
 
 export const Route = createFileRoute("/")({
@@ -177,7 +177,8 @@ function ProjectMedia({ img, title, cat }: { img?: string | undefined; title: st
 
 function Projects() {
   const [f, setF] = useState("Todos");
-  const list = HOME_PROJECTS.filter((p) => f === "Todos" || p.cat === f);
+  const visibleProjects = getVisibleHomeProjects();
+  const list = visibleProjects.filter((p) => f === "Todos" || p.category === f);
   const [featured, ...secondary] = list;
 
   return (
@@ -210,16 +211,16 @@ function Projects() {
         <article className="project-card group relative mt-8 overflow-hidden rounded-xl border border-ed-line bg-ed-bg2 transition duration-200 hover:-translate-y-0.5 hover:border-ed-line-strong focus-within:ring-2 focus-within:ring-ed-accent">
           <div className="grid md:grid-cols-[1.1fr_1fr]">
             <div className="aspect-[16/10] overflow-hidden bg-ed-bg md:aspect-auto md:min-h-[280px]">
-              <ProjectMedia img={featured.img} title={featured.t} cat={featured.cat} />
+              <ProjectMedia img={featured.img} title={featured.title} cat={featured.category} />
             </div>
             <div className="flex flex-col justify-between p-6 sm:p-8">
               <div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ed-accent">{featured.cat}</span>
+                  <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ed-accent">{featured.category}</span>
                   <span className="rounded border border-ed-line-strong px-2 py-0.5 font-mono text-[11px] text-ed-muted">{featured.stage}</span>
                 </div>
-                <h3 className="mt-3 text-2xl font-semibold text-ed-fg sm:text-[1.65rem]">{featured.t}</h3>
-                <p className="mt-3 leading-relaxed text-ed-muted">{featured.d}</p>
+                <h3 className="mt-3 text-2xl font-semibold text-ed-fg sm:text-[1.65rem]">{featured.title}</h3>
+                <p className="mt-3 leading-relaxed text-ed-muted">{featured.summary}</p>
                 <div className="mt-5 flex flex-wrap gap-4 font-mono text-xs text-ed-muted/80">
                   {featured.tags.map((t) => <span key={t}>#{t}</span>)}
                 </div>
@@ -240,20 +241,20 @@ function Projects() {
         <ul className="mt-6 divide-y divide-ed-line border-y border-ed-line">
           {secondary.map((p) => (
             <li
-              key={p.t}
+              key={p.slug}
               className="project-card group relative -mx-3 rounded-lg bg-ed-bg/90 px-3 py-6 transition duration-200 hover:bg-ed-bg2/90 focus-within:ring-2 focus-within:ring-ed-accent"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
                   <div className="aspect-[16/10] w-full shrink-0 overflow-hidden rounded-lg border border-ed-line bg-ed-bg sm:h-24 sm:w-36 sm:aspect-auto">
-                    <ProjectMedia img={p.img} title={p.t} cat={p.cat} />
+                    <ProjectMedia img={p.img} title={p.title} cat={p.category} />
                   </div>
                   <div className="max-w-xl">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-lg font-semibold text-ed-fg">{p.t}</h3>
+                      <h3 className="text-lg font-semibold text-ed-fg">{p.title}</h3>
                       <span className="rounded border border-ed-line-strong px-2 py-0.5 font-mono text-[11px] text-ed-muted">{p.stage}</span>
                     </div>
-                    <p className="mt-2 line-clamp-2 text-sm text-ed-muted">{p.d}</p>
+                    <p className="mt-2 line-clamp-2 text-sm text-ed-muted">{p.summary}</p>
                     <div className="mt-3 flex flex-wrap gap-4 font-mono text-xs text-ed-muted/80">
                       {p.tags.map((t) => <span key={t}>#{t}</span>)}
                     </div>

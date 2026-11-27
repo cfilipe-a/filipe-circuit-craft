@@ -1,5 +1,3 @@
-import imgEsp32 from "@/assets/proj-esp32.jpg";
-
 export const NAV_ITEMS = [
   { href: "#projetos", label: "Projetos" },
   { href: "#competencias", label: "Competências" },
@@ -30,30 +28,6 @@ export const METRICS = [
   ["CRT-SP", "Conselho Regional dos Técnicos Industriais de São Paulo · Ativo"],
   ["Eng. Elétrica", "Centro Universitário ENIAC (em andamento)"],
 ] as const;
-
-export type ProjectStage = "Lab / Protótipo" | "Validado em Bancada" | "Em Produção";
-
-export type HomeProject = {
-  slug: string;
-  cat: string;
-  t: string;
-  stage: ProjectStage;
-  d: string;
-  tags: string[];
-  img?: string | undefined;
-};
-
-export const HOME_PROJECTS: HomeProject[] = [
-  {
-    slug: "modelo",
-    cat: "Hardware & PCB",
-    t: "Projeto Modelo",
-    stage: "Lab / Protótipo",
-    d: "Página modelo reservada para documentar o primeiro projeto real do portfólio — escopo, hardware, firmware e resultados em bancada.",
-    tags: ["Modelo", "Documentação", "Em construção"],
-    img: imgEsp32,
-  },
-];
 
 export const PROJECT_FILTERS = ["Todos", "Hardware & PCB", "Embarcados", "Dados"] as const;
 

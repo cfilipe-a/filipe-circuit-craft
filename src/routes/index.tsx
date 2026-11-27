@@ -226,7 +226,7 @@ function Projects() {
               </div>
               <Link
                 to="/projetos/$slug"
-                params={{ slug: "exemplo" }}
+                params={{ slug: featured.slug }}
                 className="mt-6 inline-flex w-fit items-center gap-2 text-sm font-medium text-ed-accent transition group-hover:gap-3 after:absolute after:inset-0"
               >
                 Ver detalhes <ArrowRight className="h-4 w-4" />
@@ -261,7 +261,7 @@ function Projects() {
                 </div>
                 <Link
                   to="/projetos/$slug"
-                  params={{ slug: "exemplo" }}
+                  params={{ slug: p.slug }}
                   className="inline-flex shrink-0 items-center gap-2 text-sm font-medium text-ed-accent transition group-hover:gap-3 after:absolute after:inset-0"
                 >
                   Ver detalhes <ArrowRight className="h-4 w-4" />

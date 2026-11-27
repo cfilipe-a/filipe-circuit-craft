@@ -33,30 +33,36 @@ describe("Home refinements", () => {
     expect(screen.queryByText(/Production branch/i)).not.toBeInTheDocument();
   });
 
-  it("renders featured and secondary projects with images, detail links, filters, and renamed more-projects link", async () => {
+  it("renders single model project with image, detail link, filters, and renamed more-projects link", async () => {
     await renderHome();
 
     const section = document.getElementById("projetos");
     expect(section).not.toBeNull();
     const withinProjects = within(section!);
 
-    expect(withinProjects.getByRole("img", { name: "Controlador IoT com ESP32" })).toBeInTheDocument();
-    expect(withinProjects.getByRole("img", { name: "Placa de aquisição STM32" })).toBeInTheDocument();
-    expect(withinProjects.getByRole("img", { name: "Dashboard de telemetria" })).toBeInTheDocument();
-    expect(withinProjects.getAllByRole("link", { name: /Ver detalhes/i })).toHaveLength(3);
+    expect(withinProjects.getByRole("img", { name: "Projeto Modelo" })).toBeInTheDocument();
+    expect(withinProjects.getByRole("heading", { name: "Projeto Modelo" })).toBeInTheDocument();
+    expect(withinProjects.queryByText("Controlador IoT com ESP32")).not.toBeInTheDocument();
+    expect(withinProjects.queryByText("Placa de aquisição STM32")).not.toBeInTheDocument();
+    expect(withinProjects.queryByText("Dashboard de telemetria")).not.toBeInTheDocument();
+
+    const detailLinks = withinProjects.getAllByRole("link", { name: /Ver detalhes/i });
+    expect(detailLinks).toHaveLength(1);
+    expect(detailLinks[0]).toHaveAttribute("href", "/projetos/modelo");
 
     const moreLink = withinProjects.getByRole("link", { name: "Ver mais projetos" });
     expect(moreLink).toHaveAttribute("href", "https://github.com/cfilipe-a");
     expect(withinProjects.queryByText(/Ver todos os projetos no GitHub/i)).not.toBeInTheDocument();
 
+    fireEvent.click(withinProjects.getByRole("button", { name: "Dados" }));
+    expect(withinProjects.queryByRole("heading", { name: "Projeto Modelo" })).not.toBeInTheDocument();
+
     fireEvent.click(withinProjects.getByRole("button", { name: "Hardware & PCB" }));
-    expect(withinProjects.getByRole("heading", { name: "Placa de aquisição STM32" })).toBeInTheDocument();
-    expect(withinProjects.queryByRole("heading", { name: "Controlador IoT com ESP32" })).not.toBeInTheDocument();
-    expect(withinProjects.queryByRole("heading", { name: "Dashboard de telemetria" })).not.toBeInTheDocument();
+    expect(withinProjects.getByRole("heading", { name: "Projeto Modelo" })).toBeInTheDocument();
 
     fireEvent.click(withinProjects.getByRole("button", { name: "Todos" }));
-    expect(withinProjects.getByRole("heading", { name: "Controlador IoT com ESP32" })).toBeInTheDocument();
-    expect(withinProjects.getAllByRole("link", { name: /Ver detalhes/i })).toHaveLength(3);
+    expect(withinProjects.getByRole("heading", { name: "Projeto Modelo" })).toBeInTheDocument();
+    expect(withinProjects.getAllByRole("link", { name: /Ver detalhes/i })).toHaveLength(1);
   });
 
   it("wraps skills categories without horizontal overflow and switches tabs", async () => {

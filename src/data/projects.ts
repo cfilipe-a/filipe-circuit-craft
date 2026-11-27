@@ -15,58 +15,54 @@ export type ProjectDoc = {
   gallery: { src: string; caption: string }[];
   code?: { language: string; filename: string; content: string };
   youtubeId?: string;
+  videoPlaceholder?: string;
   results: string[];
 };
 
 export const projectDocs: ProjectDoc[] = [
   {
-    slug: "exemplo",
-    category: "Hardware & Firmware",
-    title: "Módulo de aquisição com ESP32",
-    subtitle: "Leitura de sensores analógicos, filtragem em firmware e envio de telemetria via MQTT.",
+    slug: "modelo",
+    category: "Hardware & PCB",
+    title: "Projeto Modelo",
+    subtitle: "Resumo curto do projeto: objetivo principal, arquitetura adotada e resultado obtido em bancada.",
     cover: imgEsp32,
     meta: [
       { label: "Data", value: "2026" },
-      { label: "MCU", value: "ESP32-WROOM" },
-      { label: "Ferramentas", value: "KiCad · PlatformIO" },
-      { label: "Status", value: "Em validação" },
+      { label: "Plataforma", value: "A definir" },
+      { label: "Ferramentas", value: "A definir" },
+      { label: "Status", value: "Modelo" },
     ],
-    stack: ["C/C++", "FreeRTOS", "MQTT", "KiCad", "Osciloscópio"],
+    stack: ["Tag 1", "Tag 2", "Tag 3"],
     overview: [
-      { heading: "Contexto & problema", text: "Descreva aqui o problema real encontrado em bancada ou em campo, o impacto e as restrições do projeto." },
-      { heading: "Solução adotada", text: "Explique a arquitetura escolhida: hardware, firmware, comunicação e como cada parte resolve o problema." },
-      { heading: "Arquitetura", text: "Detalhe os blocos do sistema (alimentação, condicionamento de sinal, MCU, comunicação) e decisões de projeto." },
+      {
+        heading: "Contexto & problema",
+        text: "Espaço reservado para descrever o problema real encontrado em bancada ou em campo, o impacto e as restrições do projeto.",
+      },
+      {
+        heading: "Solução adotada",
+        text: "Espaço reservado para explicar a solução escolhida envolvendo hardware, firmware ou software e como ela resolve o problema.",
+      },
+      {
+        heading: "Arquitetura",
+        text: "Espaço reservado para detalhar os blocos do sistema, escolhas técnicas e decisões de projeto.",
+      },
     ],
     gallery: [
-      { src: imgBench, caption: "Montagem em bancada e medições iniciais" },
-      { src: imgStm32, caption: "Placa de controle — vista superior" },
-      { src: imgIot, caption: "Dashboard de telemetria" },
+      { src: imgBench, caption: "Imagem modelo 01 — legenda da foto de bancada" },
+      { src: imgStm32, caption: "Imagem modelo 02 — legenda do hardware ou placa" },
+      { src: imgIot, caption: "Imagem modelo 03 — legenda de testes ou medições" },
     ],
     code: {
-      language: "C++",
-      filename: "main.cpp — Firmware principal",
-      content: `#include <Arduino.h>
-
-constexpr int SENSOR_PIN = 34;
-float filtro = 0.0f;
-
-void setup() {
-  Serial.begin(115200);
-  analogReadResolution(12);
-}
-
-void loop() {
-  int leitura = analogRead(SENSOR_PIN);
-  filtro = 0.9f * filtro + 0.1f * leitura; // filtro passa-baixa
-  Serial.printf("raw=%d filtrado=%.1f\\n", leitura, filtro);
-  delay(100);
-}`,
+      language: "Código",
+      filename: "arquivo-modelo — Trecho principal",
+      content: `Espaço reservado para trecho de código, firmware ou script do projeto.
+Substitua pelo conteúdo real durante a documentação do Projeto 1.`,
     },
-    youtubeId: "dQw4w9WgXcQ",
+    videoPlaceholder: "Espaço reservado para o vídeo demonstrativo do projeto",
     results: [
-      "Resultado mensurável 1 (ex.: redução de ruído em 40%)",
-      "Resultado mensurável 2 (ex.: tempo de diagnóstico reduzido)",
-      "Aprendizado ou próximo passo do projeto",
+      "Resultado mensurável 1 — substitua por uma métrica ou validação real.",
+      "Resultado mensurável 2 — substitua por um ganho técnico observado.",
+      "Próximo passo ou aprendizado técnico obtido no projeto.",
     ],
   },
 ];

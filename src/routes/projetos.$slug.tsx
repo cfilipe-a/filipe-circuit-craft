@@ -259,20 +259,27 @@ function ProjectPage() {
           </section>
         )}
 
-        {p.youtubeId && (
+        {(p.youtubeId || p.videoPlaceholder) && (
           <section>
             <SectionLabel n="04">Vídeo demonstrativo</SectionLabel>
             <div className="overflow-hidden rounded-2xl border bg-card">
-              <div className="aspect-video">
-                <iframe
-                  className="h-full w-full"
-                  src={`https://www.youtube-nocookie.com/embed/${p.youtubeId}`}
-                  title={`Vídeo — ${p.title}`}
-                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  loading="lazy"
-                />
-              </div>
+              {p.youtubeId ? (
+                <div className="aspect-video">
+                  <iframe
+                    className="h-full w-full"
+                    src={`https://www.youtube-nocookie.com/embed/${p.youtubeId}`}
+                    title={`Vídeo — ${p.title}`}
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <div className="flex aspect-video flex-col items-center justify-center gap-3 bg-secondary/40 px-6 text-center">
+                  <PlayCircle className="h-10 w-10 text-primary/70" />
+                  <p className="max-w-md text-sm text-muted-foreground">{p.videoPlaceholder}</p>
+                </div>
+              )}
               <p className="flex items-center gap-2 border-t p-4 font-mono text-xs text-muted-foreground"><PlayCircle className="h-4 w-4 text-primary" /> Funcionamento em bancada</p>
             </div>
           </section>

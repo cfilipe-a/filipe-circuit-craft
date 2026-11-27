@@ -1,6 +1,4 @@
 import imgEsp32 from "@/assets/proj-esp32.jpg";
-import imgIot from "@/assets/proj-iot.jpg";
-import imgStm32 from "@/assets/proj-stm32.jpg";
 
 export const NAV_ITEMS = [
   { href: "#projetos", label: "Projetos" },
@@ -36,6 +34,7 @@ export const METRICS = [
 export type ProjectStage = "Lab / Protótipo" | "Validado em Bancada" | "Em Produção";
 
 export type HomeProject = {
+  slug: string;
   cat: string;
   t: string;
   stage: ProjectStage;
@@ -46,28 +45,13 @@ export type HomeProject = {
 
 export const HOME_PROJECTS: HomeProject[] = [
   {
-    cat: "Embarcados",
-    t: "Controlador IoT com ESP32",
-    stage: "Validado em Bancada",
-    d: "Placa dedicada com ESP32, medição de corrente e envio MQTT com reconexão automática para monitorar cargas remotamente.",
-    tags: ["ESP32", "C++", "MQTT"],
-    img: imgEsp32,
-  },
-  {
+    slug: "modelo",
     cat: "Hardware & PCB",
-    t: "Placa de aquisição STM32",
+    t: "Projeto Modelo",
     stage: "Lab / Protótipo",
-    d: "Layout 4 camadas com plano de terra dedicado, filtragem e ADC com DMA para leituras em ambiente industrial ruidoso.",
-    tags: ["STM32", "Altium", "4 camadas"],
-    img: imgStm32,
-  },
-  {
-    cat: "Dados",
-    t: "Dashboard de telemetria",
-    stage: "Em Produção",
-    d: "Pipeline de coleta, banco de séries temporais e painéis em Power BI para análise histórica de sensores.",
-    tags: ["Python", "Power BI", "SQL"],
-    img: imgIot,
+    d: "Página modelo reservada para documentar o primeiro projeto real do portfólio — escopo, hardware, firmware e resultados em bancada.",
+    tags: ["Modelo", "Documentação", "Em construção"],
+    img: imgEsp32,
   },
 ];
 
